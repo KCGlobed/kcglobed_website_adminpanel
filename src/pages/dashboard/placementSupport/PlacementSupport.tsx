@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import DynamicServerTable from '../../../components/Table/Table';
-import type { Payload, PlacementSupport } from '../../../utils/types';
-import { useAppSelector } from '../../../hooks/useRedux';
-import { useDispatch } from 'react-redux';
+import type { Payload, PlacementSupportProps } from '../../../utils/types';
+import { useAppDispatch, useAppSelector } from '../../../hooks/useRedux';
 import ExportButtons from '../../../components/export/ExportButtons';
 import { getPlacementSupport, getPlacementSupportForExport } from '../../../store/slices/placementSlice';
 import { Columns } from './column';
@@ -11,7 +10,7 @@ import { Columns } from './column';
 const PlacementSupport: React.FC = () => {
     const [currentPage, setCurrentPage] = useState(1)
     const { data, loading, exportData } = useAppSelector((state) => state.placement);
-    const dispatch = useDispatch()
+    const dispatch = useAppDispatch()
     const [showExportModal, setShowExportModal] = useState(false);
     const [exportType, setExportType] = useState<'csv' | 'pdf' | null>(null);
     const [startDate, setStartDate] = useState('2025-07-01');
@@ -50,7 +49,7 @@ const PlacementSupport: React.FC = () => {
                     data?.length > 0 && <ExportButtons exportUrl={exportUrl} startDate={startDate} endDate={endDate} setShowExportModal={setShowExportModal} setStartDate={setStartDate} setEndDate={setEndDate} showExportModal={showExportModal} handleExportClick={handleExportClick} handleSendExport={handleSendExport} exportType={exportType} />
                 }
             </div>
-            <DynamicServerTable<PlacementSupport>
+            <DynamicServerTable<PlacementSupportProps>
                 data={data}
                 columns={Columns}
                 currentPage={currentPage}

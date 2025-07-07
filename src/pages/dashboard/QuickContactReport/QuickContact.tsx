@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import DynamicServerTable from '../../../components/Table/Table';
-import type { Payload, QuickContact } from '../../../utils/types';
-import { useAppSelector } from '../../../hooks/useRedux';
-import { useDispatch } from 'react-redux';
+import type { Payload, QuickContactProps } from '../../../utils/types';
+import { useAppDispatch, useAppSelector } from '../../../hooks/useRedux';
 import ExportButtons from '../../../components/export/ExportButtons';
 import { getQuickContactSlice, getQuickContactSliceForExport } from '../../../store/slices/quickContactSlice';
 import { Columns } from './column';
@@ -10,7 +9,7 @@ import { Columns } from './column';
 const QuickContact: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1)
   const { data, loading, exportData } = useAppSelector((state) => state.quickContact);
-  const dispatch = useDispatch()
+  const dispatch = useAppDispatch()
   const [showExportModal, setShowExportModal] = useState(false);
   const [exportType, setExportType] = useState<'csv' | 'pdf' | null>(null);
   const [startDate, setStartDate] = useState('2025-07-01');
@@ -50,7 +49,7 @@ const QuickContact: React.FC = () => {
         }
       </div>
 
-      <DynamicServerTable<QuickContact>
+      <DynamicServerTable<QuickContactProps>
         data={data}
         columns={Columns}
         currentPage={currentPage}

@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useAppSelector } from "../../hooks/useRedux";
-import { useAppDispatch } from "../../hooks/useAppDispatch";
+import { useAppDispatch, useAppSelector } from "../../hooks/useRedux";
 import { updateMeta } from "../../store/slices/metaSlice";
 import type { StepProps } from "../../utils/types";
 

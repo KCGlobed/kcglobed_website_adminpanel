@@ -1,9 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import LexicalEditor from '../../../components/TextEditor';
-import { useAppDispatch } from '../../../hooks/useAppDispatch';
 import { addBlogs, getBlogsCourseCategory } from '../../../store/slices/blogSlice';
-import { useAppSelector } from '../../../hooks/useRedux';
+import { useAppDispatch, useAppSelector } from '../../../hooks/useRedux';
 import { useNavigate } from 'react-router-dom';
 
 type BlogForm = {

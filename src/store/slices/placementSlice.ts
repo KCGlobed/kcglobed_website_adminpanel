@@ -48,6 +48,7 @@ export const getPlacementSupportForExport = createAsyncThunk<Enquiry, ExportBody
         }
     }
 );
+
 const PlacementSupportSlice = createSlice({
     name: "placement",
     initialState,

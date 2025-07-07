@@ -12,15 +12,15 @@ import EditBlog from "../pages/dashboard/blog/EditBlog";
 import Demo from "../pages/dashboard/demo";
 import PartnerWithUs from "../pages/dashboard/partnerWithUsReport/PartnerWithUs";
 import ContactUs from "../pages/dashboard/contactUsReport/ContactUs";
-import QuickContact from "../pages/dashboard/QuickContactReport/QuickContact";
 import BookOrderReport from "../pages/dashboard/bookReport/BookOrderReport";
 import FailedOrderReport from "../pages/dashboard/bookReport/FailedOrderReport";
 import CartPendingOrderReport from "../pages/dashboard/bookReport/CartPendingOrderReport";
-import PlacementSupport from "../pages/dashboard/placementSupport/PlacementSupport";
 import DynamicPages from "../pages/dashboard/dynamic-pages/DynamicPages";
 import CreatePage from "../pages/dashboard/dynamic-pages/CreatePage";
 import UpdatePage from "../pages/dashboard/dynamic-pages/UpdatePage";
 import BlogCommentsManagement from "../pages/dashboard/blog/BlogCommentsManagement";
+import PlacementSupport from "../pages/dashboard/placementSupport/PlacementSupport";
+import QuickContact from "../pages/dashboard/QuickContactReport/QuickContact";
 
 export default function AppRoutes() {
   return (

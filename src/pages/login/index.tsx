@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import type { LoginCred } from '../../utils/types';
-import { useAppDispatch } from '../../hooks/useAppDispatch';
 import { useNavigate } from 'react-router-dom';
 import { loginUser } from '../../store/slices/authSlice';
 import { useLoading } from '../../context/LoadingContext';
 import { changeMode } from '../../utils/constants';
+import { useAppDispatch } from '../../hooks/useRedux';
 
 const Login:React.FC = () => {
 

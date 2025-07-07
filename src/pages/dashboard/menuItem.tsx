@@ -13,7 +13,20 @@ export const menuItems = [
   {
     name: 'Dynamic Pages',
     icon: <FaUsers className="mr-2" />,
-    path: '/dashboard/dynamic-pages',
+    submenu: [
+      {name : 'Home Page', path: '/dashboard/dynamic-pages'},
+      {name : "Course Page", path: '/dashboard/dynamic-pages'},
+
+    ]
+  },
+  {
+    name: 'Books & Bundles',
+    icon: <FaUsers className="mr-2" />,
+    submenu: [
+      {name : 'Books', path: '/dashboard/dynamic-pages'},
+      {name : "Bundles", path: '/dashboard/dynamic-pages'},
+
+    ]
   },
   {
     name: 'Blog',

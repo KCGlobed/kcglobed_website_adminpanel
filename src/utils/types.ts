@@ -145,7 +145,7 @@ export interface ExportBodyType {
 }
 
 
-export interface QuickContact {
+export interface QuickContactProps {
   id: number;
   first_name: string;
   last_name: string;
@@ -182,7 +182,7 @@ export interface PartnerWithUs {
 
 
 
-export interface PlacementSupport {
+export interface PlacementSupportProps {
   id: number;
   first_name: string;
   last_name: string;

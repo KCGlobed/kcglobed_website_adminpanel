@@ -2,9 +2,8 @@
 import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import LexicalEditor from '../../../components/TextEditor';
-import { useAppDispatch } from '../../../hooks/useAppDispatch';
 import { getBlogsCourseCategory } from '../../../store/slices/blogSlice';
-import { useAppSelector } from '../../../hooks/useRedux';
+import { useAppDispatch, useAppSelector } from '../../../hooks/useRedux';
 import { useNavigate, useParams } from 'react-router-dom';
 import { updateBlog, viewBlog } from '../../../services/blogService';
 import { useAlert } from '../../../context/AlertContext';

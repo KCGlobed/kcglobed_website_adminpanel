@@ -22,3 +22,19 @@ export const changeMode = (isProd: boolean, reload: boolean = true): void => {
 
 export const getBaseUrl = (): string => BASE_URL;
 export { BASE_URL };
+
+
+const PAGE_TYPES = [
+    { value: 'homepage', label: 'Home Page' },
+    { value: 'course_main', label: 'Main Course Page'},
+    { value: 'course_cpa', label: 'CPA Page'},
+    { value: 'course_cma', label: 'CMA Page'},
+    { value: 'course_ea', label: 'EA Page'}
+];
+
+const SECTION_TYPES = [
+    { value: 'banner', label: 'Banner' },
+    { value: 'demo', label: 'Demo' },
+];
+
+export { PAGE_TYPES, SECTION_TYPES }

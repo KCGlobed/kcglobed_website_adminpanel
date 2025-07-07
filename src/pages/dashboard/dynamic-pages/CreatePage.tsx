@@ -1,9 +1,9 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { useDispatch } from 'react-redux';
-import { useNavigate, useParams } from 'react-router-dom';
-import { useAppSelector } from '../../../hooks/useRedux';
+import React, { useState, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAppDispatch, useAppSelector } from '../../../hooks/useRedux';
 import { createPageData } from '../../../store/slices/pagesSlice';
 import LoadingToast from '../../../components/LoadingToast/LoadingToast';
+import { PAGE_TYPES, SECTION_TYPES } from '../../../utils/constants';
 
 interface SubSection {
     title: string;
@@ -26,21 +26,11 @@ interface BannerFormData {
     sub_section: SubSection[];
 }
 
-// Predefined options
-const PAGE_TYPES = [
-    { value: 'homepage', label: 'Homepage' },
-];
-
-const SECTION_TYPES = [
-    { value: 'banner', label: 'Banner' },
-    { value: 'demo', label: 'Demo' },
-];
-
 const CreatePage: React.FC = () => {
     const navigate = useNavigate();
     const [error, setError] = useState<string | null>(null);
     const { loading } = useAppSelector(state => state.pages)
-    const dispatch = useDispatch()
+    const dispatch = useAppDispatch()
     const [formData, setFormData] = useState<BannerFormData>({
         page_type: 'homepage',
         section_type: 'banner',
@@ -414,7 +404,7 @@ const CreatePage: React.FC = () => {
                                         </label>
                                         <input
                                             type="file"
-                                            ref={el => subSectionImageRefs.current[index] = el}
+                                            ref={(el:any) => subSectionImageRefs.current[index] = el}
                                             onChange={(e) => handleSubSectionFileChange(e, index)}
                                             accept="image/*"
                                             className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"

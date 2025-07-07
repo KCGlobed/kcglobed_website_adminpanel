@@ -2,11 +2,9 @@ import React, { useEffect, useMemo, useState } from 'react';
 import type { ColumnDefinition } from '../../../components/Table/Table';
 import DynamicServerTable from '../../../components/Table/Table';
 import type { ExcellenceSection } from '../../../utils/types';
-import { useAppSelector } from '../../../hooks/useRedux';
-import { useDispatch } from 'react-redux';
+import { useAppDispatch, useAppSelector } from '../../../hooks/useRedux';
 import { getPagesData } from '../../../store/slices/pagesSlice';
 import { useNavigate } from 'react-router-dom';
-import { FaEdit, FaTrash } from 'react-icons/fa';
 import Button from '../../../components/TextEditor/ui/Button';
 import GlassButton from '../../../components/Button/Button';
 import { FiEdit, FiTrash } from 'react-icons/fi';
@@ -15,14 +13,14 @@ import { formatDate } from '../../../utils';
 const DynamicPages: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const { data, loading } = useAppSelector((state) => state.pages);
-  const dispatch = useDispatch();
+  const dispatch = useAppDispatch();
   const navigate = useNavigate();
 
-  const handleEdit = (id: string, row: ExcellenceSection) => {
+  const handleEdit = (id: string|number, row: ExcellenceSection) => {
     navigate(`/dashboard/dynamic-page/edit/${id}`, { state: { pageData: row } });
   };
 
-  const handleDelete = (id: string) => {
+  const handleDelete = (id: string|number) => {
     // confirmAlert({
     //   title: 'Confirm to delete',
     //   message: 'Are you sure you want to delete this item?',
