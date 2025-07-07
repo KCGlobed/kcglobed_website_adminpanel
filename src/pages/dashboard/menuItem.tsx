@@ -1,4 +1,4 @@
-import { FaHome, FaUsers, FaBook, FaBlogger } from 'react-icons/fa';
+import { FaUsers, FaBook, FaBlogger } from 'react-icons/fa';
 export const menuItems = [
   // {
   //   name: 'Dashboard',
@@ -14,8 +14,8 @@ export const menuItems = [
     name: 'Dynamic Pages',
     icon: <FaUsers className="mr-2" />,
     submenu: [
-      {name : 'Home Page', path: '/dashboard/dynamic-pages'},
-      {name : "Course Page", path: '/dashboard/dynamic-pages'},
+      { name: 'Home Page', path: '/dashboard/dynamic-pages' },
+      { name: "Course Page", path: '/dashboard/dynamic-pages' },
 
     ]
   },
@@ -23,8 +23,7 @@ export const menuItems = [
     name: 'Books & Bundles',
     icon: <FaUsers className="mr-2" />,
     submenu: [
-      {name : 'Books', path: '/dashboard/dynamic-pages'},
-      {name : "Bundles", path: '/dashboard/dynamic-pages'},
+      { name: 'Books', path: '/dashboard/books' }
 
     ]
   },

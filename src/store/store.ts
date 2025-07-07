@@ -11,8 +11,9 @@ import contactReducer from './slices/contactUsSlice'
 import quickContactReducer from './slices/quickContactSlice'
 import partnerWithUsReducer from './slices/partnerwithusslice'
 import placementSupportReducer from './slices/placementSlice'
-import bookReducer from './slices/bookSlice'
+import bookOrderReducer from './slices/bookOrderSlice'
 import pagesReducer from './slices/pagesSlice'
+import bookReducer from './slices/bookSlice'
 export const store = configureStore({
   reducer: {
     auth: authReducer,
@@ -27,8 +28,9 @@ export const store = configureStore({
     quickContact: quickContactReducer,
     partnerWithUs: partnerWithUsReducer,
     placement: placementSupportReducer,
-    book: bookReducer,
-    pages: pagesReducer
+    book: bookOrderReducer,
+    pages: pagesReducer,
+    books: bookReducer
   },
 });
 

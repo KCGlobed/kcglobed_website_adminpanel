@@ -31,7 +31,7 @@ const PartnerWitUs: React.FC = () => {
       render: (_, row) =>
         row.document ? (
           <a
-            href={`/documents/${row.document}`}
+            href={`${row.document}`}
             target="_blank"
             rel="noopener noreferrer"
             className="text-blue-600 underline"

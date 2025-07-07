@@ -1,14 +1,13 @@
+// Completed Orders(Default): {{url}}/api/book/get-purchased-books/ (GET)
+// Pending Orders : {{url}}/api/book/get-purchased-books/pending (GET)
+// Failed Orders: {{url}}/api/book/get-purchased-books/failed (GET)
+
+
+
 import { apiRequest } from "./apiRequest";
 
-export const fetchAllBooks = (): Promise<any> => {
-    return apiRequest(`book/book-listing/`, "GET");
-};
-export const createNewBook = (payload: any): Promise<any> => {
-    return apiRequest(`book/upload-book/`, "POST", payload);
-};
-
-export const addBookImage = (payload: any): Promise<any> => {
-    return apiRequest(`book/add-book-image/`, "POST", payload);
+export const fetchSuccessBook = (): Promise<any> => {
+    return apiRequest(`book/get-purchased-books/`, "GET");
 };
 
 export const fetchFailedBook = (): Promise<any> => {

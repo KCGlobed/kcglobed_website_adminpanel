@@ -268,3 +268,17 @@ export interface Comment {
   blog_info: BlogInfo;
   actions?: any;
 }
+
+
+export interface BookProps {
+  name: string;
+  course_name: string;
+  subject_name: string;
+  language: string;
+  original_price: number;
+  discount_percentage: number;
+  total_price: number;
+  out_of_stock: number;
+  publisher: string;
+  action?: any
+}

@@ -6,7 +6,7 @@ import { useAppSelector } from '../../../hooks/useRedux';
 import { useDispatch } from 'react-redux';
 import { getEnqueryForExport } from '../../../store/slices/contactUsSlice';
 import ExportButtons from '../../../components/export/ExportButtons';
-import { getPendingBook, getPendingBookForExport } from '../../../store/slices/bookSlice';
+import { getPendingBook, getPendingBookForExport } from '../../../store/slices/bookOrderSlice';
 import { Columns } from './column';
 
 

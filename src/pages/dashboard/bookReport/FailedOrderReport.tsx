@@ -6,7 +6,7 @@ import { useAppSelector } from '../../../hooks/useRedux';
 import { useDispatch } from 'react-redux';
 import { getEnqueryForExport } from '../../../store/slices/contactUsSlice';
 import ExportButtons from '../../../components/export/ExportButtons';
-import { getFailedBook, getFailedBookForExport } from '../../../store/slices/bookSlice';
+import { getFailedBook, getFailedBookForExport } from '../../../store/slices/bookOrderSlice';
 import { Columns } from './column';
 const FailedOrderReport: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1)

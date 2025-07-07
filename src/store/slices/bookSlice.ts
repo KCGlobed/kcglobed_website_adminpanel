@@ -1,34 +1,32 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
-import type { BookOrder, Enquiry, ExportBodyType } from "../../utils/types";
-import { fetchFailedBook, fetchFailedBookForExport, fetchPendingBook, fetchPendingBookForExport, fetchSuccessBook, fetchSuccessBookForExport } from "../../services/book";
+import type { BookProps } from "../../utils/types";
+import { addBookImage, createNewBook, fetchAllBooks } from "../../services/book";
 
 
 
-export interface BookOrderState {
-    data: BookOrder[];
+export interface BookState {
+    data: BookProps[];
     count: number;
     loading: boolean;
     error: string | null;
     previous: string | null;
     next: string | null;
-    exportData?: Enquiry[];
 }
 
-const initialState: BookOrderState = {
+const initialState: BookState = {
     data: [],
     count: 0,
     loading: false,
     error: null,
     previous: null,
     next: null,
-    exportData: [],
 };
 
-export const getSuccessBook = createAsyncThunk<BookOrder, void, { rejectValue: string }>(
-    "Book/success",
+export const getAllBooks = createAsyncThunk<BookProps, void, { rejectValue: string }>(
+    "Book/get",
     async (_, { rejectWithValue }) => {
         try {
-            const data = await fetchSuccessBook();
+            const data = await fetchAllBooks();
             return data;
 
         } catch (error: any) {
@@ -37,11 +35,11 @@ export const getSuccessBook = createAsyncThunk<BookOrder, void, { rejectValue: s
     }
 );
 
-export const getPendingBook = createAsyncThunk<BookOrder, void, { rejectValue: string }>(
-    "Book/pending",
-    async (_, { rejectWithValue }) => {
+export const uploadNewBook = createAsyncThunk<BookProps, void, { rejectValue: string }>(
+    "Book/create",
+    async (payload, { rejectWithValue }) => {
         try {
-            const data = await fetchPendingBook();
+            const data = await createNewBook(payload);
             return data;
 
         } catch (error: any) {
@@ -50,48 +48,13 @@ export const getPendingBook = createAsyncThunk<BookOrder, void, { rejectValue: s
     }
 );
 
-export const getFailedBook = createAsyncThunk<BookOrder, void, { rejectValue: string }>(
-    "Book/failed",
-    async (_, { rejectWithValue }) => {
+export const uploadBookImage = createAsyncThunk<BookProps, void, { rejectValue: string }>(
+    "Book/image",
+    async (payload, { rejectWithValue }) => {
         try {
-            const data = await fetchFailedBook();
+            const data = await addBookImage(payload);
             return data;
 
-        } catch (error: any) {
-            return rejectWithValue(error.message || "Failed to fetch blogs");
-        }
-    }
-);
-export const getSuccessBookForExport = createAsyncThunk<BookOrder, ExportBodyType, { rejectValue: string }>(
-    "book/getSuccessBookForExport",
-    async (body, { rejectWithValue }) => {
-        try {
-            const data = await fetchSuccessBookForExport(body.payload, body.type);
-            return data;
-        } catch (error: any) {
-            return rejectWithValue(error.message || "Failed to fetch blogs");
-        }
-    }
-);
-
-export const getPendingBookForExport = createAsyncThunk<BookOrder, ExportBodyType, { rejectValue: string }>(
-    "book/getPendingBookForExport",
-    async (body, { rejectWithValue }) => {
-        try {
-            const data = await fetchPendingBookForExport(body.payload, body.type);
-            return data;
-        } catch (error: any) {
-            return rejectWithValue(error.message || "Failed to fetch blogs");
-        }
-    }
-);
-
-export const getFailedBookForExport = createAsyncThunk<BookOrder, ExportBodyType, { rejectValue: string }>(
-    "book/getFailedBookForExport",
-    async (body, { rejectWithValue }) => {
-        try {
-            const data = await fetchFailedBookForExport(body.payload, body.type);
-            return data;
         } catch (error: any) {
             return rejectWithValue(error.message || "Failed to fetch blogs");
         }
@@ -104,81 +67,39 @@ const BookSlice = createSlice({
     },
     extraReducers: (builder) => {
         builder
-            .addCase(getSuccessBook.pending, (state) => {
+            .addCase(getAllBooks.pending, (state) => {
                 state.loading = true;
                 state.error = null;
             })
-            .addCase(getSuccessBook.fulfilled, (state, action) => {
+            .addCase(getAllBooks.fulfilled, (state, action) => {
                 state.loading = false;
-                console.log(action, "action")
                 state.data = (action.payload as any).results ?? action.payload;
             })
-            .addCase(getSuccessBook.rejected, (state, action) => {
+            .addCase(getAllBooks.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload || "Unknown error";
             })
-            .addCase(getPendingBook.pending, (state) => {
+            .addCase(uploadNewBook.pending, (state) => {
                 state.loading = true;
                 state.error = null;
             })
-            .addCase(getPendingBook.fulfilled, (state, action) => {
+            .addCase(uploadNewBook.fulfilled, (state, action) => {
                 state.loading = false;
-                console.log(action, "action")
                 state.data = (action.payload as any).results ?? action.payload;
             })
-            .addCase(getPendingBook.rejected, (state, action) => {
+            .addCase(uploadNewBook.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload || "Unknown error";
             })
-            .addCase(getFailedBook.pending, (state) => {
+            .addCase(uploadBookImage.pending, (state) => {
                 state.loading = true;
                 state.error = null;
             })
-            .addCase(getFailedBook.fulfilled, (state, action) => {
+            .addCase(uploadBookImage.fulfilled, (state, action) => {
                 state.loading = false;
-                console.log(action, "action")
                 state.data = (action.payload as any).results ?? action.payload;
             })
-            .addCase(getFailedBook.rejected, (state, action) => {
-                state.loading = false;
-                state.error = action.payload || "Unknown error";
-            })
-            .addCase(getSuccessBookForExport.pending, (state) => {
-                state.loading = true;
-                state.error = null;
-            })
-            .addCase(getSuccessBookForExport.fulfilled, (state, action) => {
-                state.loading = false;
-                console.log(action, "action")
-                state.exportData = (action.payload as any).results ?? action.payload;
-            })
-            .addCase(getSuccessBookForExport.rejected, (state, action) => {
-                state.loading = false;
-                state.error = action.payload || "Unknown error";
-            })
-            .addCase(getPendingBookForExport.pending, (state) => {
-                state.loading = true;
-                state.error = null;
-            })
-            .addCase(getPendingBookForExport.fulfilled, (state, action) => {
-                state.loading = false;
-                console.log(action, "action")
-                state.exportData = (action.payload as any).results ?? action.payload;
-            })
-            .addCase(getPendingBookForExport.rejected, (state, action) => {
-                state.loading = false;
-                state.error = action.payload || "Unknown error";
-            })
-            .addCase(getFailedBookForExport.pending, (state) => {
-                state.loading = true;
-                state.error = null;
-            })
-            .addCase(getFailedBookForExport.fulfilled, (state, action) => {
-                state.loading = false;
-                console.log(action, "action")
-                state.exportData = (action.payload as any).results ?? action.payload;
-            })
-            .addCase(getFailedBookForExport.rejected, (state, action) => {
+            .addCase(uploadBookImage.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload || "Unknown error";
             })

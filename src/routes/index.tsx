@@ -21,6 +21,8 @@ import UpdatePage from "../pages/dashboard/dynamic-pages/UpdatePage";
 import BlogCommentsManagement from "../pages/dashboard/blog/BlogCommentsManagement";
 import PlacementSupport from "../pages/dashboard/placementSupport/PlacementSupport";
 import QuickContact from "../pages/dashboard/QuickContactReport/QuickContact";
+import Book from "../pages/dashboard/Book";
+import BookForm from "../pages/dashboard/Book/BookForm";
 
 export default function AppRoutes() {
   return (
@@ -49,6 +51,8 @@ export default function AppRoutes() {
           <Route path="dynamic-pages" element={<DynamicPages />} />
           <Route path="create/dynamic-page" element={<CreatePage />} />
           <Route path="dynamic-page/edit/:id" element={<UpdatePage />} />
+          <Route path="books" element={<Book />} />
+          <Route path="new-book" element={<BookForm />} />
         </Route>
       </Route>
       <Route path="/" element={<Navigate to="/login" />} />
