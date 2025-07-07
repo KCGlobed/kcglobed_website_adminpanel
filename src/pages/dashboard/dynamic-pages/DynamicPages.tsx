@@ -10,6 +10,7 @@ import { FaEdit, FaTrash } from 'react-icons/fa';
 import Button from '../../../components/TextEditor/ui/Button';
 import GlassButton from '../../../components/Button/Button';
 import { FiEdit, FiTrash } from 'react-icons/fi';
+import { formatDate } from '../../../utils';
 
 const DynamicPages: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
@@ -81,7 +82,11 @@ const DynamicPages: React.FC = () => {
           '-'
         )
     },
-    { key: 'created_at', title: 'Created At', align: 'center' },
+    {
+      key: 'created_at', title: 'Created At', align: 'center', render: (_, row) => {
+        return formatDate(row.created_at)
+      }
+    },
     {
       key: 'actions',
       title: 'Actions',

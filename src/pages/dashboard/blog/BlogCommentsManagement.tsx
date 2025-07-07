@@ -6,6 +6,7 @@ import { useAppSelector } from '../../../hooks/useRedux';
 import type { Comment } from '../../../utils/types';
 import GlassButton from '../../../components/Button/Button';
 import { MdDelete } from "react-icons/md";
+import { formatDate } from '../../../utils';
 
 
 const BlogCommentsManagement = () => {
@@ -53,11 +54,7 @@ const BlogCommentsManagement = () => {
         }
     };
 
-    const formatDate = (dateString: string) => {
-        const date = new Date(dateString);
-        return date.toLocaleString();
-    };
-
+   
     // Filter data based on selected status
     const filteredData = useMemo(() => {
         if (filter === null) {

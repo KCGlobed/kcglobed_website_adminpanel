@@ -43,7 +43,7 @@ const Dashboard: React.FC = () => {
             </button>
           </div>
           <nav className="flex flex-col space-y-1">
-            {menuItems.map((item) => (
+            {menuItems?.map((item) => (
               <div key={item.name} className="relative group">
                 {item && item.submenu && item.submenu ? (
                   <>
@@ -79,14 +79,14 @@ const Dashboard: React.FC = () => {
                     {/* Submenu for collapsed sidebar: show on hover */}
                     {isSidebarCollapsed && (
                       <div
-                        className="absolute z-50 hidden group-hover:flex flex-col bg-white shadow-2xl rounded-lg min-w-[200px] py-2 left-12 top-1"
+                        className="absolute z-50 hidden group-hover:flex flex-col bg-[#9810FA] text-white shadow-2xl rounded-lg min-w-[200px] py-2 left-12 top-1"
                         style={{ boxShadow: '0 8px 32px rgba(0,0,0,0.18)' }}
                       >
                         {item.submenu.map((subItem) => (
                           <Link
                             key={subItem.name}
                             to={subItem.path}
-                            className="p-2 text-sm text-gray-700 hover:text-white hover:bg-blue-600 rounded transition whitespace-nowrap"
+                            className="p-2 text-sm hover:text-white hover:text-blue-600 rounded transition whitespace-nowrap"
                           >
                             {subItem.name}
                           </Link>
@@ -106,7 +106,7 @@ const Dashboard: React.FC = () => {
                 )}
                 {/* Tooltip for collapsed sidebar, only for items without submenu */}
                 {isSidebarCollapsed && !item.submenu && (
-                  <span className="absolute left-full top-1/2 -translate-y-1/2 ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap z-50 transition-opacity duration-200">
+                  <span className="absolute left-full top-1/2 -translate-y-1/2 ml-2 px-2 py-1 bg-[#9810FA] text-white text-xs rounded opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap z-80 transition-opacity duration-200">
                     {item.name}
                   </span>
                 )}
