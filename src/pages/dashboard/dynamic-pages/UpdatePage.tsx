@@ -1,7 +1,7 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../../../hooks/useRedux';
-import { FaArrowLeft, FaSave } from 'react-icons/fa';
+import { FaArrowLeft, FaSave, FaTrash, FaPlus } from 'react-icons/fa';
 import Button from '../../../components/TextEditor/ui/Button';
 import type { ExcellenceSection } from '../../../utils/types';
 import { updatePageData } from '../../../store/slices/pagesSlice';
@@ -18,21 +18,30 @@ const SECTION_TYPES = [
     { value: 'banner', label: 'Banner' },
     { value: 'featured', label: 'Featured Section' },
     { value: 'testimonial', label: 'Testimonial Section' },
+    { value: 'partner_section', label: 'Partner Section' },
 ];
 
+interface SubSection {
+    id?: number;
+    title: string;
+    description: string;
+    image: File | null;
+    existingImage?: string;
+}
+
 interface LocationState {
-    pageData: ExcellenceSection;
+    pageData: ExcellenceSection & { sub_section?: SubSection[] };
 }
 
 const UpdatePage: React.FC = () => {
     const { state } = useLocation();
-    const { loading } = useAppSelector(state => state.pages)
+    const { loading } = useAppSelector(state => state.pages);
     const { pageData } = state as LocationState;
     const dispatch = useAppDispatch();
     const navigate = useNavigate();
-    const param = useParams()
+    const param = useParams();
     const [error, setError] = useState<string | null>(null);
-
+    console.log('Page Data:', pageData);
     const [formData, setFormData] = useState({
         page_type: pageData.page_type,
         section_type: pageData.section_type,
@@ -44,12 +53,17 @@ const UpdatePage: React.FC = () => {
         image: null as File | null,
         existingSliderVideo: pageData.slider_video,
         existingImage: pageData.image,
+        sub_section: pageData.sub_section?.map(sub => ({
+            ...sub,
+            image: null,
+            existingImage: sub.image
+        })) || [] as SubSection[],
     });
 
     const videoRef = useRef<HTMLInputElement>(null);
     const imageRef = useRef<HTMLInputElement>(null);
+    const subSectionImageRefs = useRef<(HTMLInputElement | null)[]>([]);
 
-    // Handlers remain the same as before
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
         setFormData(prev => ({ ...prev, [name]: value }));
@@ -59,6 +73,80 @@ const UpdatePage: React.FC = () => {
         if (e.target.files && e.target.files[0]) {
             const { name } = e.target;
             setFormData(prev => ({ ...prev, [name]: e.target.files![0] }));
+        }
+    };
+
+    const handleSubSectionFileChange = (e: React.ChangeEvent<HTMLInputElement>, index: number) => {
+        if (e.target.files && e.target.files[0]) {
+            const updatedSubSections = [...formData.sub_section];
+            updatedSubSections[index] = {
+                ...updatedSubSections[index],
+                image: e.target.files[0]
+            };
+            setFormData(prev => ({
+                ...prev,
+                sub_section: updatedSubSections
+            }));
+        }
+    };
+
+    const handleSubSectionChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>, index: number) => {
+        const { name, value } = e.target;
+        const updatedSubSections = [...formData.sub_section];
+        updatedSubSections[index] = {
+            ...updatedSubSections[index],
+            [name]: value
+        };
+        setFormData(prev => ({
+            ...prev,
+            sub_section: updatedSubSections
+        }));
+    };
+
+    const addSubSection = () => {
+        setFormData(prev => ({
+            ...prev,
+            sub_section: [
+                ...prev.sub_section,
+                {
+                    title: '',
+                    description: '',
+                    image: null
+                }
+            ]
+        }));
+    };
+
+    const removeSubSection = (index: number) => {
+        const updatedSubSections = formData.sub_section.filter((_, i) => i !== index);
+        setFormData(prev => ({
+            ...prev,
+            sub_section: updatedSubSections
+        }));
+    };
+
+    const handleRemoveFile = (field: 'slider_video' | 'image') => {
+        setFormData(prev => ({ ...prev, [field]: null }));
+        if (field === 'slider_video' && videoRef.current) {
+            videoRef.current.value = '';
+        }
+        if (field === 'image' && imageRef.current) {
+            imageRef.current.value = '';
+        }
+    };
+
+    const handleRemoveSubSectionFile = (index: number) => {
+        const updatedSubSections = [...formData.sub_section];
+        updatedSubSections[index] = {
+            ...updatedSubSections[index],
+            image: null
+        };
+        setFormData(prev => ({
+            ...prev,
+            sub_section: updatedSubSections
+        }));
+        if (subSectionImageRefs.current[index]) {
+            subSectionImageRefs.current[index]!.value = '';
         }
     };
 
@@ -82,27 +170,26 @@ const UpdatePage: React.FC = () => {
                 formDataToSend.append('image', formData.image);
             }
 
+            formData.sub_section.forEach((subSection, index) => {
+                formDataToSend.append(`sub_section[${index}][title]`, subSection.title);
+                formDataToSend.append(`sub_section[${index}][description]`, subSection.description);
+                if (subSection.image) {
+                    formDataToSend.append(`sub_section[${index}][image]`, subSection.image);
+                }
+                if (subSection.id) {
+                    formDataToSend.append(`sub_section[${index}][id]`, subSection.id.toString());
+                }
+            });
 
             if (!param.id) {
                 setError('Page ID is missing');
                 return;
             }
-
+            // console.log('Form Data to Send:', formData);
             await dispatch(updatePageData({ id: param.id, formData: formDataToSend }));
         } catch (err) {
             setError('Failed to update page. Please try again.');
             console.error(err);
-        } finally {
-        }
-    };
-
-    const handleRemoveFile = (field: 'slider_video' | 'image') => {
-        setFormData(prev => ({ ...prev, [field]: null }));
-        if (field === 'slider_video' && videoRef.current) {
-            videoRef.current.value = '';
-        }
-        if (field === 'image' && imageRef.current) {
-            imageRef.current.value = '';
         }
     };
 
@@ -275,7 +362,6 @@ const UpdatePage: React.FC = () => {
                                         <source src={formData.existingSliderVideo} type="video/mp4" />
                                         Your browser does not support the video tag.
                                     </video>
-                                    {/* <p className="text-xs text-gray-500 mt-1">{formData.existingSliderVideo}</p> */}
                                 </div>
                             )}
                         </div>
@@ -324,28 +410,128 @@ const UpdatePage: React.FC = () => {
                                         className="w-full max-w-md rounded-md border"
                                         style={{ maxHeight: '200px', objectFit: 'cover' }}
                                     />
-                                    <p className="text-xs text-gray-500 mt-1">{formData.existingImage}</p>
                                 </div>
                             )}
                         </div>
                     </div>
 
+                    {/* Sub Sections */}
+                    <div className="mb-6">
+                        <div className="flex justify-between items-center mb-4">
+                            <h3 className="text-lg font-medium">Sub Sections</h3>
+                            <Button
+                                type="button"
+                                onClick={addSubSection}
+                                className="flex items-center gap-2"
+                                variant="secondary"
+                            >
+                                <FaPlus /> Add Sub Section
+                            </Button>
+                        </div>
+
+                        {formData.sub_section.map((subSection, index) => (
+                            <div key={index} className="mb-6 p-4 border border-gray-200 rounded-lg">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                                            Title
+                                        </label>
+                                        <input
+                                            type="text"
+                                            name="title"
+                                            value={subSection.title}
+                                            onChange={(e) => handleSubSectionChange(e, index)}
+                                            className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                                            required
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                                            Description
+                                        </label>
+                                        <input
+                                            type="text"
+                                            name="description"
+                                            value={subSection.description}
+                                            onChange={(e) => handleSubSectionChange(e, index)}
+                                            className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                                        />
+                                    </div>
+
+                                    <div className="md:col-span-2">
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                                            Image
+                                        </label>
+                                        <input
+                                            type="file"
+                                            ref={el => subSectionImageRefs.current[index] = el}
+                                            onChange={(e) => handleSubSectionFileChange(e, index)}
+                                            accept="image/*"
+                                            className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                                        />
+                                        {subSection.image && (
+                                            <div className="mt-2">
+                                                <div className="flex items-center mb-2">
+                                                    <span className="text-sm text-gray-600 mr-2">
+                                                        {subSection.image.name}
+                                                    </span>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => handleRemoveSubSectionFile(index)}
+                                                        className="text-red-500 hover:text-red-700 text-sm"
+                                                    >
+                                                        Remove
+                                                    </button>
+                                                </div>
+                                                <img
+                                                    src={URL.createObjectURL(subSection.image)}
+                                                    alt="Selected sub-section image"
+                                                    className="w-full max-w-md rounded-md border"
+                                                    style={{ maxHeight: '200px', objectFit: 'cover' }}
+                                                />
+                                            </div>
+                                        )}
+                                        {subSection.existingImage && !subSection.image && (
+                                            <div className="mt-2">
+                                                <p className="text-sm text-gray-600 mb-2">Current Image:</p>
+                                                <img
+                                                    src={subSection.existingImage}
+                                                    alt="Current sub-section image"
+                                                    className="w-full max-w-md rounded-md border"
+                                                    style={{ maxHeight: '200px', objectFit: 'cover' }}
+                                                />
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+
+                                <Button
+                                    type="button"
+                                    onClick={() => removeSubSection(index)}
+                                    variant="danger"
+                                    className="flex items-center gap-2"
+                                >
+                                    <FaTrash /> Remove Sub Section
+                                </Button>
+                            </div>
+                        ))}
+                    </div>
+
                     <div className="flex justify-end gap-4">
-                        <Button
+                        <button
                             type="button"
                             onClick={() => navigate('/dashboard/dynamic-pages')}
                             variant="secondary"
                         >
                             Cancel
-                        </Button>
-                        <Button
-                            type="submit"
-                            variant="primary"
+                        </button>
+                        <button
                             className="flex items-center gap-2"
                             disabled={loading}
                         >
                             <FaSave /> {loading ? 'Saving...' : 'Save Changes'}
-                        </Button>
+                        </button>
                     </div>
                 </form>
             </div>
