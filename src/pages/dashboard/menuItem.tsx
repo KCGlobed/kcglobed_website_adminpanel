@@ -23,7 +23,8 @@ export const menuItems = [
     name: 'Books & Bundles',
     icon: <FaUsers className="mr-2" />,
     submenu: [
-      { name: 'Books', path: '/dashboard/books' }
+      { name: 'Books', path: '/dashboard/books' },
+      { name: 'Book in bundle', path: '/dashboard/book-bundle' }
 
     ]
   },

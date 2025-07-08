@@ -6,38 +6,26 @@ export const fetchAllBooks = (): Promise<any> => {
 export const createNewBook = (payload: any): Promise<any> => {
     return apiRequest(`book/upload-book/`, "POST", payload);
 };
+export const updateBook = (payload: any): Promise<any> => {
+    return apiRequest(`book/update-book/${payload.id}`, "POST", payload.data);
+};
+export const getBookImages = (id: any): Promise<any> => {
+    return apiRequest(`book/get-book-images/${id}`, "GET");
+};
+export const deleteTheImage = (id: any): Promise<any> => {
+    return apiRequest(`book/delete-book-image/${id}`, "DELETE");
+};
+export const deleteTheBook = (id: any): Promise<any> => {
+    return apiRequest(`book/delete-book/${id}`, "DELETE");
+};
 
 export const addBookImage = (payload: any): Promise<any> => {
     return apiRequest(`book/add-book-image/`, "POST", payload);
 };
-
-export const fetchFailedBook = (): Promise<any> => {
-    return apiRequest(`book/get-purchased-books/failed`, "GET");
+export const addBookInBundle = (payload: any): Promise<any> => {
+    return apiRequest(`book/add-bundle-book/`, "POST", payload);
 };
-export const fetchPendingBook = (): Promise<any> => {
-    return apiRequest(`book/get-purchased-books/pending`, "GET");
-};
-// completed , pending, failed
-// {{url}}/api/book/get-book-order-${type}-report/completed
-
-export const fetchSuccessBookForExport = (payload: {
-    start_date: string,
-    end_date: string,
-}, type: string): Promise<any> => {
-    return apiRequest(`book/get-book-order-${type}-report/completed`, "POST", payload);
+export const getBundleDetail = (id: any): Promise<any> => {
+    return apiRequest(`book/get-bundle-book/${id}`, "GET");
 };
 
-export const fetchPendingBookForExport = (payload: {
-    start_date: string,
-    end_date: string,
-}, type: string): Promise<any> => {
-    return apiRequest(`book/get-book-order-${type}-report/pending`, "POST", payload);
-};
-
-
-export const fetchFailedBookForExport = (payload: {
-    start_date: string,
-    end_date: string,
-}, type: string): Promise<any> => {
-    return apiRequest(`book/get-book-order-${type}-report/failed`, "POST", payload);
-};

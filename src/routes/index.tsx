@@ -23,6 +23,9 @@ import PlacementSupport from "../pages/dashboard/placementSupport/PlacementSuppo
 import QuickContact from "../pages/dashboard/QuickContactReport/QuickContact";
 import Book from "../pages/dashboard/Book";
 import BookForm from "../pages/dashboard/Book/BookForm";
+import UpdateBookForm from "../pages/dashboard/Book/UpdateBookForm";
+import BookImageManager from "../pages/dashboard/Book/BookImageManager";
+import AddBookInBundle from "../pages/dashboard/Book/AddBookInBundle";
 
 export default function AppRoutes() {
   return (
@@ -53,6 +56,10 @@ export default function AppRoutes() {
           <Route path="dynamic-page/edit/:id" element={<UpdatePage />} />
           <Route path="books" element={<Book />} />
           <Route path="new-book" element={<BookForm />} />
+          <Route path="update-book/:id" element={<UpdateBookForm />} />
+          <Route path="update-images/:id" element={<UpdateBookForm />} />
+          <Route path="book-images/:id" element={<BookImageManager />} />
+          <Route path="book-bundle" element={<AddBookInBundle />} />
         </Route>
       </Route>
       <Route path="/" element={<Navigate to="/login" />} />

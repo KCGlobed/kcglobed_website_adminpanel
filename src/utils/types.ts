@@ -271,6 +271,7 @@ export interface Comment {
 
 
 export interface BookProps {
+  id?: string
   name: string;
   course_name: string;
   subject_name: string;
@@ -280,5 +281,6 @@ export interface BookProps {
   total_price: number;
   out_of_stock: number;
   publisher: string;
-  action?: any
+  actions?: any
+  is_bundle?: boolean
 }

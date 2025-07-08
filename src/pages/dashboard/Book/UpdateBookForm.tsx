@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import LexicalEditor from "../../../components/TextEditor";
 import { useAppDispatch, useAppSelector } from "../../../hooks/useRedux";
-import { uploadNewBook } from "../../../store/slices/bookSlice";
+import { getBookImage, updateExistingBook } from "../../../store/slices/bookSlice";
 import Button from "../../../components/TextEditor/ui/Button";
 import { FaArrowLeft } from "react-icons/fa";
-import { useNavigate } from "react-router-dom";
-import { useAlert } from "../../../context/AlertContext";
 
 interface Book {
     id?: number;
@@ -16,7 +15,6 @@ interface Book {
     short_description: string;
     no_of_pages: number;
     language: string;
-    // book_file: File | null;
     perview_image: string;
     original_price: number;
     discount_percentage: number;
@@ -31,82 +29,66 @@ interface Book {
     visible: number;
     out_of_stock: number;
     created_at?: string;
-    description?: string
+    description?: string;
+    images?: string[];
+    is_bundle?: boolean;
 }
 
-interface BookFormProps {
-    initialData?: Book; // for update
-    onSubmit: (data: FormData) => void;
-}
+const UpdateBookForm: React.FC = () => {
+    const location = useLocation();
+    const navigate = useNavigate();
+    const dispatch = useAppDispatch();
+    const book: Book = location.state?.book;
+    const [formData, setFormData] = useState<Book | null>(null);
+    const [previewImage, setPreviewImage] = useState<{ file?: File; url: string; isNew: boolean } | null>(null);
 
-const BookForm: React.FC<BookFormProps> = () => {
-    const { loading } = useAppSelector(state => state.books)
-    const { showAlert } = useAlert()
-    const navigate = useNavigate()
-    const [formData, setFormData] = useState<Book & { is_bundle: boolean }>({
-        name: "",
-        course_name: "",
-        subject_name: "",
-        short_description: "",
-        no_of_pages: 0,
-        language: "English",
-        // book_file: null,
-        perview_image: "",
-        original_price: 0,
-        discount_percentage: 0,
-        discount_type: null,
-        publisher: "",
-        isbn: null,
-        gst_amount: 0,
-        total_price: 0,
-        usa_original_price: 0,
-        usa_discount_percentage: 0,
-        usa_total_price: 0,
-        visible: 1,
-        out_of_stock: 0,
-        description: "",
-        is_bundle: false,
-    });
-    const dispatch = useAppDispatch()
-    const [previewImage, setPreviewImage] = useState<{ file: File; url: string } | null>(null);
-
+    // Prefill from backend
     useEffect(() => {
-        return () => {
-            if (previewImage) URL.revokeObjectURL(previewImage.url);
-        };
-    }, [previewImage]);
+        if (book && book.id !== undefined) {
+            dispatch(getBookImage(book.id as any));
+            setFormData({ ...book, is_bundle: (book as any).is_bundle ?? false });
+            if (book.perview_image) {
+                setPreviewImage({ url: book.perview_image, isNew: false });
+            }
+        }
+    }, [book]);
+
+    if (!formData) return <div>Loading...</div>;
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         const { name, value, type } = e.target;
-        const parsedValue = type === "number" ? Number(value) : value;
-        setFormData(prev => ({
+        let parsedValue: any = value;
+        if (type === "number") {
+            parsedValue = Number(value);
+        } else if (type === "checkbox") {
+            parsedValue = (e.target as HTMLInputElement).checked;
+        }
+        setFormData(prev => prev ? ({
             ...prev,
             [name]: parsedValue,
-        }));
+        }) : prev);
     };
 
     const handlePreviewImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file) {
-            if (previewImage) URL.revokeObjectURL(previewImage.url);
-
+            if (previewImage && previewImage.isNew) URL.revokeObjectURL(previewImage.url);
             const url = URL.createObjectURL(file);
-            setPreviewImage({ file, url });
-            setFormData(prev => ({ ...prev, perview_image: file.name }));
+            setPreviewImage({ file, url, isNew: true });
+            setFormData(prev => prev ? ({ ...prev, perview_image: file.name }) : prev);
         }
     };
-
     const handleRemovePreviewImage = () => {
         if (previewImage) {
-            URL.revokeObjectURL(previewImage.url);
+            if (previewImage.isNew) URL.revokeObjectURL(previewImage.url);
             setPreviewImage(null);
-            setFormData(prev => ({ ...prev, perview_image: "" }));
+            setFormData(prev => prev ? ({ ...prev, perview_image: "" }) : prev);
         }
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-
+        if (!formData?.id) return;
         const data: any = new FormData();
         Object.entries(formData).forEach(([key, value]) => {
             if (value !== null) {
@@ -117,35 +99,33 @@ const BookForm: React.FC<BookFormProps> = () => {
                 }
             }
         });
-        if (previewImage) {
+        if (previewImage && previewImage.isNew && previewImage.file) {
             data.append("perview_image", previewImage.file);
+        } else {
+            data.delete && data.delete("perview_image");
         }
         try {
-            await dispatch(uploadNewBook(data)).unwrap();
-            console.log(formData, 'this ')
-            showAlert("Book added successfully", 'success')
+            await dispatch(updateExistingBook({ data, id: formData.id })).unwrap();
             navigate("/dashboard/books")
         } catch (err) {
-            // console.error("Error creating book or uploading images", err);
+            console.error("Error updating book or uploading images", err);
         }
     };
 
-
     return (
         <div className="max-w-8xl mx-auto p-6 bg-white rounded-lg shadow-sm border border-gray-100">
-            <div className="flex items-center justify-between">  <h2 className="text-2xl font-semibold mb-6 text-gray-800 border-b pb-3 flex items-center">
+            <div className="flex justify-between items-center"> <h2 className="text-2xl font-semibold mb-6 text-gray-800 border-b pb-3 flex items-center">
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 mr-2 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                 </svg>
-                Add New Book
+                Update Book
             </h2>
                 <Button
                     onClick={() => navigate('/dashboard/books')}
                     className="flex items-center gap-2"
                 >
                     <FaArrowLeft /> Back to List
-                </Button>
-            </div>
+                </Button></div>
             <form onSubmit={handleSubmit} className="space-y-8">
                 {/* Section 1: Basic Info */}
                 <div className="p-6 bg-gray-50 rounded-lg shadow-md space-y-4">
@@ -162,7 +142,6 @@ const BookForm: React.FC<BookFormProps> = () => {
                                 className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                             />
                         </div>
-
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">Course Name</label>
                             <input
@@ -174,7 +153,6 @@ const BookForm: React.FC<BookFormProps> = () => {
                                 className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                             />
                         </div>
-
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">Subject Name</label>
                             <input
@@ -186,7 +164,6 @@ const BookForm: React.FC<BookFormProps> = () => {
                                 className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                             />
                         </div>
-
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">No. of Pages</label>
                             <input
@@ -198,7 +175,6 @@ const BookForm: React.FC<BookFormProps> = () => {
                                 className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                             />
                         </div>
-
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">Language</label>
                             <select
@@ -211,7 +187,6 @@ const BookForm: React.FC<BookFormProps> = () => {
                                 <option value="Hindi">Hindi</option>
                             </select>
                         </div>
-
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">Preview Image</label>
                             <div className="space-y-2">
@@ -242,7 +217,6 @@ const BookForm: React.FC<BookFormProps> = () => {
                         </div>
                     </div>
                 </div>
-
                 {/* Section 2: Pricing */}
                 <div className="p-6 bg-gray-50 rounded-lg shadow-md space-y-4">
                     <h2 className="text-lg font-semibold text-gray-700">Pricing Details (India)</h2>
@@ -258,7 +232,6 @@ const BookForm: React.FC<BookFormProps> = () => {
                                 className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                             />
                         </div>
-
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">Discount %</label>
                             <input
@@ -270,7 +243,6 @@ const BookForm: React.FC<BookFormProps> = () => {
                                 className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                             />
                         </div>
-
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">Total Price</label>
                             <input
@@ -282,7 +254,6 @@ const BookForm: React.FC<BookFormProps> = () => {
                                 className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                             />
                         </div>
-
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">Discount Type</label>
                             <input
@@ -295,7 +266,6 @@ const BookForm: React.FC<BookFormProps> = () => {
                         </div>
                     </div>
                 </div>
-
                 {/* Section 3: USA Pricing */}
                 <div className="p-6 bg-gray-50 rounded-lg shadow-md space-y-4">
                     <h2 className="text-lg font-semibold text-gray-700">Pricing Details (USA)</h2>
@@ -311,7 +281,6 @@ const BookForm: React.FC<BookFormProps> = () => {
                                 className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                             />
                         </div>
-
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">USA Discount %</label>
                             <input
@@ -323,7 +292,6 @@ const BookForm: React.FC<BookFormProps> = () => {
                                 className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                             />
                         </div>
-
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">USA Total Price</label>
                             <input
@@ -337,7 +305,6 @@ const BookForm: React.FC<BookFormProps> = () => {
                         </div>
                     </div>
                 </div>
-
                 {/* Section 4: Additional Info */}
                 <div className="p-6 bg-gray-50 rounded-lg shadow-md space-y-4">
                     <h2 className="text-lg font-semibold text-gray-700">Additional Information</h2>
@@ -353,7 +320,6 @@ const BookForm: React.FC<BookFormProps> = () => {
                                 className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                             />
                         </div>
-
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">Publisher</label>
                             <input
@@ -364,7 +330,6 @@ const BookForm: React.FC<BookFormProps> = () => {
                                 className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                             />
                         </div>
-
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">ISBN</label>
                             <input
@@ -375,7 +340,6 @@ const BookForm: React.FC<BookFormProps> = () => {
                                 className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                             />
                         </div>
-
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">Visibility</label>
                             <select
@@ -388,7 +352,6 @@ const BookForm: React.FC<BookFormProps> = () => {
                                 <option value={0}>Hidden</option>
                             </select>
                         </div>
-
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">Stock Status</label>
                             <select
@@ -407,8 +370,8 @@ const BookForm: React.FC<BookFormProps> = () => {
                                 id="is_bundle"
                                 name="is_bundle"
                                 type="checkbox"
-                                checked={formData.is_bundle}
-                                onChange={e => setFormData(prev => ({ ...prev, is_bundle: e.target.checked }))}
+                                checked={!!formData.is_bundle}
+                                onChange={handleChange}
                                 className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                             />
                             <label htmlFor="is_bundle" className="ml-2 block text-sm text-gray-700">
@@ -420,7 +383,6 @@ const BookForm: React.FC<BookFormProps> = () => {
                 {/* Section 5: Descriptions */}
                 <div className="p-6 bg-gray-50 rounded-lg shadow-md space-y-6">
                     <h2 className="text-lg font-semibold text-gray-700">Descriptions</h2>
-
                     {/* Short Description */}
                     <div className="space-y-2">
                         <label className="block text-sm font-medium text-gray-700">
@@ -431,13 +393,12 @@ const BookForm: React.FC<BookFormProps> = () => {
                                 type="short_description"
                                 value={formData.short_description}
                                 onChange={(value) =>
-                                    setFormData({ ...formData, short_description: value })
+                                    setFormData(prev => prev ? { ...prev, short_description: value } : prev)
                                 }
                                 placeholder="Write a brief description..."
                             />
                         </div>
                     </div>
-
                     {/* Full Description */}
                     <div className="space-y-2">
                         <label className="block text-sm font-medium text-gray-700">
@@ -448,33 +409,20 @@ const BookForm: React.FC<BookFormProps> = () => {
                                 type="description"
                                 value={formData.description}
                                 onChange={(value) =>
-                                    setFormData({ ...formData, description: value })
+                                    setFormData(prev => prev ? { ...prev, description: value } : prev)
                                 }
                                 placeholder="Write a detailed description..."
                             />
                         </div>
                     </div>
                 </div>
-
-
                 {/* Submit Button */}
                 <div className="text-right">
                     <button
                         type="submit"
                         className="inline-flex items-center bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        disabled={loading}
                     >
-                        {loading ? (
-                            <>
-                                <svg className="animate-spin h-5 w-5 mr-2 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
-                                </svg>
-                                Creating...
-                            </>
-                        ) : (
-                            "Create Book"
-                        )}
+                        Update Book
                     </button>
                 </div>
             </form>
@@ -482,5 +430,4 @@ const BookForm: React.FC<BookFormProps> = () => {
     );
 };
 
-export default BookForm;
-
+export default UpdateBookForm;

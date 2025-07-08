@@ -127,17 +127,17 @@ function DynamicServerTable<T extends object>({
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {loading ? (
+                {loading || !data ? (
                   renderSkeleton()
                 ) : (
-                  data.map((row, i) => (
+                  data?.map((row, i) => (
                     <tr key={i} className="hover:bg-gray-50 transition-colors duration-150">
                       {columns.map(col => {
-                        const value = row[col.key];                        
+                        const value = row[col.key];
                         // Handle different value types properly
                         let displayValue: string;
                         let modalContent: string;
-                        
+
                         if (value === undefined || value === null || value === '') {
                           displayValue = '-';
                           modalContent = '-';
@@ -153,7 +153,7 @@ function DynamicServerTable<T extends object>({
                             // For other objects, try to find a display property or use JSON
                             const displayProps = ['name', 'title', 'label', 'text', 'description'];
                             const displayProp = displayProps.find(prop => (value as any)[prop] !== undefined);
-                            
+
                             if (displayProp && (value as any)[displayProp]) {
                               displayValue = String((value as any)[displayProp]);
                             } else {
@@ -165,7 +165,7 @@ function DynamicServerTable<T extends object>({
                           displayValue = String(value);
                           modalContent = String(value);
                         }
-                        
+
                         const handleCellClick = (e: React.MouseEvent<HTMLDivElement>) => {
                           const el = e.currentTarget;
                           if (el.scrollHeight > el.clientHeight) {

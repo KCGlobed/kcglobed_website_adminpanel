@@ -26,7 +26,7 @@ import {TabIndentationPlugin} from '@lexical/react/LexicalTabIndentationPlugin';
 import {TablePlugin} from '@lexical/react/LexicalTablePlugin';
 import {useLexicalEditable} from '@lexical/react/useLexicalEditable';
 import {CAN_USE_DOM} from '@lexical/utils';
-import {useEffect, useState} from 'react';
+import {useEffect, useState, useRef} from 'react';
 
 import {useSettings} from './context/SettingContext';
 import {useSharedHistoryContext} from './context/SharedHistoryContext';
@@ -108,10 +108,12 @@ export default function Editor({value}:any): JSX.Element {
   const [editor] = useLexicalComposerContext();
   const [activeEditor, setActiveEditor] = useState(editor);
   const [isLinkEditMode, setIsLinkEditMode] = useState<boolean>(false);
+  const floatingAnchorElemRef = useRef<HTMLDivElement | null>(null);
 
   const onRef = (floatingAnchorElem: HTMLDivElement) => {
-    if (floatingAnchorElem !== null) {
+    if (floatingAnchorElem !== null && floatingAnchorElemRef.current !== floatingAnchorElem) {
       setFloatingAnchorElem(floatingAnchorElem);
+      floatingAnchorElemRef.current = floatingAnchorElem;
     }
   };
 
