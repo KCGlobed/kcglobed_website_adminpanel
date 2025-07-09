@@ -284,3 +284,21 @@ export interface BookProps {
   actions?: any
   is_bundle?: boolean
 }
+export interface Testimonial {
+  name: string
+  image: string
+  content: string
+  testimonials_type: string
+  id?: string
+  qualification: string
+  actions?: any
+  college?: any
+}
+
+
+export interface Testimonials {
+  student: Testimonial[]
+  placement: Testimonial[]
+  corporate: Testimonial[]
+  institutions: Testimonial[]
+}

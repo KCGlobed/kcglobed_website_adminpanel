@@ -66,4 +66,9 @@ export const menuItems = [
       { name: 'Cart pending ordered report', path: '/dashboard/cart-pending-order-report' },
     ],
   },
+  {
+    name: 'Testimonial',
+    icon: <FaBook className="mr-2" />,
+    path: "/dashboard/testimonial"
+  },
 ];

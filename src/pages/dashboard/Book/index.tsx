@@ -35,11 +35,7 @@ const Book: React.FC = () => {
     const filteredBooks = isBundleFilter === null
         ? data
         : data.filter((book: any) => book.is_bundle === isBundleFilter);
-    const returnData = async (id: any) => {
-        await dispatch(getBundleDetails(id) as any)
-        console.log(bundledata)
-        return bundledata
-    }
+
     // Pass handleNavigate to Columns
     const columns = Columns(handleNavigate, navigate, handleDeleteBook, showModal);
 

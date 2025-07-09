@@ -26,6 +26,9 @@ import BookForm from "../pages/dashboard/Book/BookForm";
 import UpdateBookForm from "../pages/dashboard/Book/UpdateBookForm";
 import BookImageManager from "../pages/dashboard/Book/BookImageManager";
 import AddBookInBundle from "../pages/dashboard/Book/AddBookInBundle";
+import Testimonial from "../pages/dashboard/testimonial/Testimonial";
+import AddTestimonial from "../pages/dashboard/testimonial/AddTestimonial";
+import UpdateTestimonial from "../pages/dashboard/testimonial/UpdateTestimonial";
 
 export default function AppRoutes() {
   return (
@@ -60,6 +63,9 @@ export default function AppRoutes() {
           <Route path="update-images/:id" element={<UpdateBookForm />} />
           <Route path="book-images/:id" element={<BookImageManager />} />
           <Route path="book-bundle" element={<AddBookInBundle />} />
+          <Route path="testimonial" element={<Testimonial />} />
+          <Route path="testimonial/add" element={<AddTestimonial />} />
+          <Route path="testimonial/update/:id" element={<UpdateTestimonial />} />
         </Route>
       </Route>
       <Route path="/" element={<Navigate to="/login" />} />

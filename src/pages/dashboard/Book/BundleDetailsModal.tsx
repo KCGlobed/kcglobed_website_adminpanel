@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 
 interface BundleDetailsModalProps {
     id: number | string;
@@ -27,12 +27,12 @@ function BundleDetailsModal({ id, fetchBundleDetails }: BundleDetailsModalProps)
     }, [id, fetchBundleDetails]);
 
     if (loading) return <div className="py-8 text-center text-gray-500">Loading...</div>;
-    if (!details || details.length === 0) return <div className="py-8 text-center text-gray-500">No bundle details found.</div>;
+    if (!details || details?.length === 0) return <div className="py-8 text-center text-gray-500">No bundle details found.</div>;
 
     return (
         <div className="space-y-6">
             {/* Main Bundle Info - Find the main bundle (is_bundle: true) */}
-            {details.filter(item => item.bundle_book_info.is_bundle).map(bundle => (
+            {details?.filter(item => item.bundle_book_info.is_bundle).map(bundle => (
                 <div key={bundle.id} className="flex flex-col md:flex-row gap-6 pb-6 border-b border-gray-200">
                     <img
                         src={bundle.bundle_book_info.perview_image}

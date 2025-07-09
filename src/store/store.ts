@@ -14,6 +14,7 @@ import placementSupportReducer from './slices/placementSlice'
 import bookOrderReducer from './slices/bookOrderSlice'
 import pagesReducer from './slices/pagesSlice'
 import bookReducer from './slices/bookSlice'
+import testimonialReducer from './slices/testimonialSlice'
 export const store = configureStore({
   reducer: {
     auth: authReducer,
@@ -30,7 +31,8 @@ export const store = configureStore({
     placement: placementSupportReducer,
     book: bookOrderReducer,
     pages: pagesReducer,
-    books: bookReducer
+    books: bookReducer,
+    testimonial: testimonialReducer
   },
 });
 
