@@ -1,11 +1,12 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import type { Enquiry, ExcellenceSection } from "../../utils/types";
-import { createPage, fetchPagesData, updatePage } from "../../services/pages";
+import { createPage, fetchPagesData, getAllPagesName, getAllSections, updatePage } from "../../services/pages";
 
 
 
 export interface DynamicPageState {
     data: ExcellenceSection[];
+    section_Data: ExcellenceSection[];
     count: number;
     loading: boolean;
     error: string | null;
@@ -20,6 +21,7 @@ const initialState: DynamicPageState = {
     error: null,
     previous: null,
     next: null,
+    section_Data: []
 };
 
 export const getPagesData = createAsyncThunk<Enquiry, void, { rejectValue: string }>(
@@ -59,6 +61,31 @@ export const updatePageData = createAsyncThunk<Enquiry, void, { rejectValue: str
     }
 );
 
+export const getAllPageNames = createAsyncThunk<any, void, { rejectValue: string }>(
+    "pages/names",
+    async (_, { rejectWithValue }) => {
+        try {
+            const data = await getAllPagesName();
+            return data;
+        } catch (error: any) {
+            return rejectWithValue(error.message || "Failed to fetch blogs");
+        }
+    }
+);
+
+export const getAllSection = createAsyncThunk<any, void, { rejectValue: string }>(
+    "pages/section-type",
+    async (_, { rejectWithValue }) => {
+        try {
+            const data = await getAllSections();
+            return data;
+
+        } catch (error: any) {
+            return rejectWithValue(error.message || "Failed to fetch blogs");
+        }
+    }
+);
+
 const PagesSlice = createSlice({
     name: "pages",
     initialState,
@@ -78,7 +105,33 @@ const PagesSlice = createSlice({
             .addCase(getPagesData.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload || "Unknown error";
-            }).addCase(createPageData.pending, (state) => {
+            })
+            .addCase(getAllPageNames.pending, (state) => {
+                state.loading = true;
+                state.error = null;
+            })
+            .addCase(getAllPageNames.fulfilled, (state, action) => {
+                state.loading = false;
+                state.data = action.payload.data
+            })
+            .addCase(getAllPageNames.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.payload || "Unknown error";
+            })
+            .addCase(getAllSection.pending, (state) => {
+                state.loading = true;
+                state.error = null;
+            })
+            .addCase(getAllSection.fulfilled, (state, action) => {
+                state.loading = false;
+                console.log(action.payload, 'this is test...')
+                state.section_Data = action.payload.data
+            })
+            .addCase(getAllSection.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.payload || "Unknown error";
+            })
+            .addCase(createPageData.pending, (state) => {
                 state.loading = true;
                 state.error = null;
             })

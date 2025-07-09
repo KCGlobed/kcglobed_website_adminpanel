@@ -174,7 +174,7 @@ const CreatePage: React.FC = () => {
                 }
             });
 
-            dispatch(createPageData(formDataToSend));
+            dispatch(createPageData(formDataToSend as any));
         } catch (err) {
             setError('Failed to submit form. Please try again.');
             console.error(err);
@@ -404,7 +404,7 @@ const CreatePage: React.FC = () => {
                                         </label>
                                         <input
                                             type="file"
-                                            ref={(el:any) => subSectionImageRefs.current[index] = el}
+                                            ref={(el: any) => subSectionImageRefs.current[index] = el}
                                             onChange={(e) => handleSubSectionFileChange(e, index)}
                                             accept="image/*"
                                             className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"

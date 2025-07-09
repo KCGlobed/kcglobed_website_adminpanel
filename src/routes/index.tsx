@@ -29,6 +29,8 @@ import AddBookInBundle from "../pages/dashboard/Book/AddBookInBundle";
 import Testimonial from "../pages/dashboard/testimonial/Testimonial";
 import AddTestimonial from "../pages/dashboard/testimonial/AddTestimonial";
 import UpdateTestimonial from "../pages/dashboard/testimonial/UpdateTestimonial";
+import PageName from "../pages/dashboard/dynamic-pages/PageName";
+import CreatePageName from "../pages/dashboard/dynamic-pages/CreatePageName";
 
 export default function AppRoutes() {
   return (
@@ -55,6 +57,8 @@ export default function AppRoutes() {
           <Route path="failed-order-report" element={<FailedOrderReport />} />
           <Route path="cart-pending-order-report" element={<CartPendingOrderReport />} />
           <Route path="dynamic-pages" element={<DynamicPages />} />
+          <Route path="dynamic-pages/names" element={<PageName />} />
+          <Route path="dynamic-pages/names/create" element={<CreatePageName />} />
           <Route path="create/dynamic-page" element={<CreatePage />} />
           <Route path="dynamic-page/edit/:id" element={<UpdatePage />} />
           <Route path="books" element={<Book />} />

@@ -1,21 +1,12 @@
 import { FaUsers, FaBook, FaBlogger } from 'react-icons/fa';
 export const menuItems = [
-  // {
-  //   name: 'Dashboard',
-  //   icon: <FaHome className="mr-2" />,
-  //   path: '/dashboard',
-  // },
-  // {
-  //   name: 'Users',
-  //   icon: <FaUsers className="mr-2" />,
-  //   path: '/dashboard/user',
-  // },
   {
     name: 'Dynamic Pages',
     icon: <FaUsers className="mr-2" />,
     submenu: [
       { name: 'Home Page', path: '/dashboard/dynamic-pages' },
       { name: "Course Page", path: '/dashboard/dynamic-pages' },
+      { name: "Pages", path: '/dashboard/dynamic-pages/names' }
 
     ]
   },

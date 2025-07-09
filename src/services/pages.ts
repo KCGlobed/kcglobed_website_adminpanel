@@ -3,6 +3,12 @@ import { apiRequest } from "./apiRequest";
 export const fetchPagesData = (): Promise<any> => {
     return apiRequest(`landing-page/get-homepage-content`, "GET");
 };
+export const getAllPagesName = (): Promise<any> => {
+    return apiRequest(`landing-page/get-page-list/`, "GET");
+};
+export const getAllSections = (): Promise<any> => {
+    return apiRequest(`landing-page/get-section-type-list/`, "GET");
+};
 
 export const fetchCategry = (): Promise<any> => {
     return apiRequest(`notes/blog-category-list/`, "GET");
