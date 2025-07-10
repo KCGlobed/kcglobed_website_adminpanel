@@ -55,6 +55,7 @@ export const ModalProvider = ({ children }: { children: ReactNode }) => {
             className={`bg-white rounded-xl shadow-xl w-full p-6 relative ${getSizeClass(
               modalData.size
             )}`}
+            onClick={e => e.stopPropagation()}
           >
             <button
               onClick={hideModal}

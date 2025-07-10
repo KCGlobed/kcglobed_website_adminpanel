@@ -1,8 +1,10 @@
-import { useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { useLocation, useParams } from 'react-router-dom'
 import { useAppDispatch, useAppSelector } from '../../../hooks/useRedux'
 import Button from '../../../components/TextEditor/ui/Button'
+import { createNewPageName, createNewSectionName, getAllPageNames } from '../../../store/slices/pagesSlice'
+import { useAlert } from '../../../context/AlertContext'
+import { useEffect } from 'react'
 
 // Error display component
 const FormError = ({ error }: { error?: string }) =>
@@ -15,14 +17,11 @@ interface PageFormData {
 }
 
 function CreatePageName() {
-    const { id } = useParams()
     const location = useLocation()
-    const isEditMode = Boolean(id)
-    const { loading } = useAppSelector(state => state.pages)
+    const { loading, data } = useAppSelector(state => state.pages)
     const dispatch = useAppDispatch()
-
-    // Options for page_type select
-    const pageTypeOptions = Array.isArray(location.state) ? location.state : []
+    const { showAlert } = useAlert()
+    const pageTypeOptions = data ? data : []
 
     // Form 1: Select-based page_type
     const {
@@ -49,52 +48,32 @@ function CreatePageName() {
             section_type: ''
         }
     })
-
-    // Pre-fill logic for edit mode (optional, can be customized)
-    useEffect(() => {
-        if (isEditMode && id) {
-            // dispatch(getPageById(id)).then((action) => {
-            //   if (action.payload) {
-            //     setValueSelect('page_type', action.payload.page_type)
-            //     setValueSelect('section_type', action.payload.section_type)
-            //     setValueText('page_type', action.payload.page_type)
-            //     setValueText('section_type', action.payload.section_type)
-            //   }
-            // })
-        }
-    }, [id, isEditMode, dispatch, setValueSelect, setValueText])
-
     // Submit handler for select-based form
-    const onSubmitSelect = (data: PageFormData) => {
-        if (isEditMode && id) {
-            // dispatch(updatePage({ id, data }))
-        } else {
-            // dispatch(createPage(data))
-        }
-        // Optionally reset form or show success
+    const onSubmitSelect = async (data: PageFormData) => {
+        await dispatch(createNewSectionName({ page_id: data.page_type, section_type: data.section_type } as any))
+        showAlert("Section name created successfully")
     }
 
     // Submit handler for text-input-based form
-    const onSubmitText = (data: PageFormData) => {
-        if (isEditMode && id) {
-            // dispatch(updatePage({ id, data }))
-        } else {
-            // dispatch(createPage(data))
-        }
-        // Optionally reset form or show success
+    const onSubmitText = async (data: PageFormData) => {
+        await dispatch(createNewPageName(data as any))
+        showAlert("Page name created successfully")
+        dispatch(getAllPageNames())
     }
-
+    useEffect(() => {
+        dispatch(getAllPageNames())
+    }, [dispatch])
     return (
         <div className="max-w-8xl mx-auto p-6 bg-white rounded-lg shadow-sm border border-gray-100">
-            <h2 className="text-2xl font-bold mb-4">
-                {isEditMode ? 'Edit Page' : 'Create New Page'}
-            </h2>
             <div className="flex flex-wrap gap-4 w-full">
                 {/* Form 1: Select-based page_type */}
-                <form onSubmit={handleSubmitSelect(onSubmitSelect)} className="flex-1 bg-gray-50 rounded p-6">
+                <form onSubmit={handleSubmitSelect(onSubmitSelect)} className="flex-1 bg-gray-50 rounded-lg p-6">
+                    <h2 className="text-2xl font-bold mb-4">
+                        Create New Section
+                    </h2>
                     <div className="mb-4">
                         <label htmlFor="page_type_select" className="block text-sm font-medium text-gray-700 mb-1">
-                            Page Type (Select)
+                            Section Type
                         </label>
                         <select
                             id="page_type_select"
@@ -122,15 +101,18 @@ function CreatePageName() {
                     </div>
                     <div className="mt-6">
                         <Button onClick={() => { }} disabled={loading}>
-                            {isEditMode ? 'Update Page (Select)' : 'Create Page (Select)'}
+                            Create Section
                         </Button>
                     </div>
                 </form>
                 {/* Form 2: Text-input-based page_type */}
                 <form onSubmit={handleSubmitText(onSubmitText)} className="flex-1 bg-gray-50 rounded p-6">
+                    <h2 className="text-2xl font-bold mb-4">
+                        Create New Page
+                    </h2>
                     <div className="mb-4">
                         <label htmlFor="page_type_text" className="block text-sm font-medium text-gray-700 mb-1">
-                            Page Type (Text)
+                            Page Type
                         </label>
                         <input
                             id="page_type_text"
@@ -140,21 +122,9 @@ function CreatePageName() {
                         />
                         <FormError error={errorsText.page_type?.message} />
                     </div>
-                    <div className="mb-4">
-                        <label htmlFor="section_type_text" className="block text-sm font-medium text-gray-700 mb-1">
-                            Section Type
-                        </label>
-                        <input
-                            id="section_type_text"
-                            type="text"
-                            className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${errorsText.section_type ? 'border-red-500' : 'border-gray-300'}`}
-                            {...registerText('section_type', { required: 'Section type is required' })}
-                        />
-                        <FormError error={errorsText.section_type?.message} />
-                    </div>
                     <div className="mt-6">
                         <Button onClick={() => { }} disabled={loading}>
-                            {isEditMode ? 'Update Page (Text)' : 'Create Page (Text)'}
+                            Create Page
                         </Button>
                     </div>
                 </form>

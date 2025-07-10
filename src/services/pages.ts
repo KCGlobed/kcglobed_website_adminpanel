@@ -17,11 +17,27 @@ export const createPage = async (payload: any): Promise<any> => {
     return await apiRequest(`landing-page/add-section-data/`, 'POST', payload);
 };
 
+export const createPageName = async (payload: any): Promise<any> => {
+    return await apiRequest(`landing-page/add-page/`, 'POST', payload);
+};
+
+export const createSectionName = async (payload: any): Promise<any> => {
+    return await apiRequest(`landing-page/add-section-type/`, 'POST', payload);
+};
+
 
 export const updatePage = async (payload: any): Promise<any> => {
-    console.log(payload, 'thi sis payload')
     return await apiRequest(`landing-page/update-section-data/${payload.id}`, 'POST', payload.formData);
 };
+
+export const updatePageName = async (id: string | number, payload: any): Promise<any> => {
+    return await apiRequest(`landing-page/update-page/${id}`, 'POST', payload);
+};
+
+export const updateSectionName = async (id: string | number, payload: any): Promise<any> => {
+    return await apiRequest(`landing-page/update-section-type/${id}`, 'POST', payload);
+};
+
 export const updateBlog = async (id: string | number, payload: FormData): Promise<any> => {
     return await apiRequest(`notes/edit-blog/${id}`, 'POST', payload);
 }

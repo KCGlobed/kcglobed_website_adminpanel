@@ -1,6 +1,6 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import type { Enquiry, ExcellenceSection } from "../../utils/types";
-import { createPage, fetchPagesData, getAllPagesName, getAllSections, updatePage } from "../../services/pages";
+import { createPage, createPageName, createSectionName, fetchPagesData, getAllPagesName, getAllSections, updatePage, updatePageName, updateSectionName } from "../../services/pages";
 
 
 
@@ -86,6 +86,58 @@ export const getAllSection = createAsyncThunk<any, void, { rejectValue: string }
     }
 );
 
+
+export const createNewPageName = createAsyncThunk<any, FormData, { rejectValue: string }>(
+    "pages/page-name",
+    async (payload, { rejectWithValue }) => {
+        try {
+            const data = await createPageName(payload);
+            return data;
+
+        } catch (error: any) {
+            return rejectWithValue(error.message || "Failed to fetch blogs");
+        }
+    }
+);
+
+
+export const createNewSectionName = createAsyncThunk<any, FormData, { rejectValue: string }>(
+    "pages/section-name",
+    async (payload, { rejectWithValue }) => {
+        try {
+            const data = await createSectionName(payload);
+            return data;
+
+        } catch (error: any) {
+            return rejectWithValue(error.message || "Failed to fetch blogs");
+        }
+    }
+);
+
+export const updatePageNameData = createAsyncThunk<any, { id: string | number, payload: any }, { rejectValue: string }>(
+    "pages/update-page-name",
+    async ({ id, payload }, { rejectWithValue }) => {
+        try {
+            const data = await updatePageName(id, payload);
+            return data;
+        } catch (error: any) {
+            return rejectWithValue(error.message || "Failed to update page name");
+        }
+    }
+);
+
+export const updateSectionNameData = createAsyncThunk<any, { id: string | number, payload: any }, { rejectValue: string }>(
+    "pages/update-section-name",
+    async ({ id, payload }, { rejectWithValue }) => {
+        try {
+            const data = await updateSectionName(id, payload);
+            return data;
+        } catch (error: any) {
+            return rejectWithValue(error.message || "Failed to update section name");
+        }
+    }
+);
+
 const PagesSlice = createSlice({
     name: "pages",
     initialState,
@@ -142,7 +194,8 @@ const PagesSlice = createSlice({
             .addCase(createPageData.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload || "Unknown error";
-            }).addCase(updatePageData.pending, (state) => {
+            })
+            .addCase(updatePageData.pending, (state) => {
                 state.loading = true;
                 state.error = null;
             })
@@ -151,6 +204,28 @@ const PagesSlice = createSlice({
                 state.data = (action.payload as any).results ?? action.payload;
             })
             .addCase(updatePageData.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.payload || "Unknown error";
+            })
+            .addCase(createNewPageName.pending, (state) => {
+                state.loading = true;
+                state.error = null;
+            })
+            .addCase(createNewPageName.fulfilled, (state) => {
+                state.loading = false;
+            })
+            .addCase(createNewPageName.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.payload || "Unknown error";
+            })
+            .addCase(createNewSectionName.pending, (state) => {
+                state.loading = true;
+                state.error = null;
+            })
+            .addCase(createNewSectionName.fulfilled, (state) => {
+                state.loading = false;
+            })
+            .addCase(createNewSectionName.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload || "Unknown error";
             })
