@@ -31,6 +31,9 @@ import AddTestimonial from "../pages/dashboard/testimonial/AddTestimonial";
 import UpdateTestimonial from "../pages/dashboard/testimonial/UpdateTestimonial";
 import PageName from "../pages/dashboard/dynamic-pages/PageName";
 import CreatePageName from "../pages/dashboard/dynamic-pages/CreatePageName";
+import Course from "../pages/dashboard/courses/Course";
+import UpdateCourse from "../pages/dashboard/courses/UpdateCourse";
+import CreateCourse from "../pages/dashboard/courses/CreateCourse";
 
 export default function AppRoutes() {
   return (
@@ -67,6 +70,9 @@ export default function AppRoutes() {
           <Route path="update-images/:id" element={<UpdateBookForm />} />
           <Route path="book-images/:id" element={<BookImageManager />} />
           <Route path="book-bundle" element={<AddBookInBundle />} />
+          <Route path="courses" element={<Course />} />
+          <Route path="new-course" element={<CreateCourse />} />
+          <Route path="update-course/:id" element={<UpdateCourse />} />
           <Route path="testimonial" element={<Testimonial />} />
           <Route path="testimonial/add" element={<AddTestimonial />} />
           <Route path="testimonial/update/:id" element={<UpdateTestimonial />} />
