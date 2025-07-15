@@ -2,7 +2,7 @@ import { configureStore } from "@reduxjs/toolkit";
 import authReducer from "./slices/authSlice";
 import userReducer from './slices/userSlice';
 import essayReducer from './slices/essaySlice';
-import courseReducer from "./slices/courseDataSlice";
+// import courseReducer from "./slices/courseDataSlice";
 import questionReducer from './slices/questionSlice';
 import metaReducer from './slices/metaSlice';
 import exhibitReducer from './slices/exhibitSlice';
@@ -15,6 +15,7 @@ import bookOrderReducer from './slices/bookOrderSlice'
 import pagesReducer from './slices/pagesSlice'
 import bookReducer from './slices/bookSlice'
 import testimonialReducer from './slices/testimonialSlice'
+import courseReducer from './slices/courseSlice'
 export const store = configureStore({
   reducer: {
     auth: authReducer,
@@ -32,7 +33,7 @@ export const store = configureStore({
     book: bookOrderReducer,
     pages: pagesReducer,
     books: bookReducer,
-    testimonial: testimonialReducer
+    testimonial: testimonialReducer,
   },
 });
 

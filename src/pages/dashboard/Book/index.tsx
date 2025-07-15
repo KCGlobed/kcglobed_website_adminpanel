@@ -29,6 +29,7 @@ const Book: React.FC = () => {
     const handleDeleteBook = async (id: string) => {
         const res = await dispatch(deleteBook(id as any) as any)
         showAlert(res?.payload?.message, "success")
+        dispatch(getAllBooks() as any)
     };
 
     // Filter books by is_bundle if filter is set

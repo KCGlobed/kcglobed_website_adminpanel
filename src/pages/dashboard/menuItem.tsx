@@ -19,6 +19,11 @@ export const menuItems = [
     ]
   },
   {
+    name: 'Courses',
+    icon: <FaUsers className="mr-2" />,
+    path: "/dashboard/courses"
+  },
+  {
     name: 'Blog',
     icon: <FaBlogger className="mr-2" />,
     submenu: [
