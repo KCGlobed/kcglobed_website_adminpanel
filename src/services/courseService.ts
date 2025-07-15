@@ -3,6 +3,9 @@ import { apiRequest } from "./apiRequest";
 export const fetchAllCourses = (): Promise<any> => {
     return apiRequest(`course/course-listing/`, "GET");
 };
+export const fetchAllCategories = (): Promise<any> => {
+    return apiRequest(`course/course-category/`, "GET");
+};
 export const createNewBook = (payload: any): Promise<any> => {
     return apiRequest(`book/upload-book/`, "POST", payload);
 };

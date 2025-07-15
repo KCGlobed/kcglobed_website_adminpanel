@@ -9,6 +9,7 @@ import Button from '../../../components/TextEditor/ui/Button';
 import type { CourseProps } from '../../../utils/types';
 import GlassButton from '../../../components/Button/Button';
 import { FiEdit, FiTrash } from 'react-icons/fi';
+import { Link } from 'react-router-dom';
 
 const Course: React.FC = () => {
     const [currentPage, setCurrentPage] = useState(1);
@@ -79,12 +80,12 @@ const Course: React.FC = () => {
         <div className="overflow-x-hidden">
             <div className="flex mb-4 gap-4 justify-between items-center">
                 <h2 className="text-2xl font-bold text-gray-800">All Courses</h2>
-                <Button
-                    onClick={() => navigate('/dashboard/new-course')}
-                    className="px-5 py-2 rounded-2xl bg-purple-600 hover:bg-purple-700 text-white font-semibold shadow-md hover:shadow-lg transition-all duration-300"
+                <Link
+                    to="/dashboard/new-course"
+                    className="cursor-pointer px-5 py-2 rounded-2xl bg-purple-600 hover:bg-purple-700 text-white font-semibold shadow-md hover:shadow-lg transition-all duration-300"
                 >
                     + New Course
-                </Button>
+                </Link>
             </div>
             <DynamicServerTable<any>
                 data={data}

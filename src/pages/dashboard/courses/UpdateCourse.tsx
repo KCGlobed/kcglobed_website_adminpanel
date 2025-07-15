@@ -9,9 +9,10 @@ import { useAlert } from '../../../context/AlertContext';
 interface Course {
   id: number;
   image: string;
+  banner_image?: string;
   full_name: string;
   shortname: string;
-  category: { id: number; name: string } | null;
+  category: number; // store only id
   price: number;
   discount: number;
   duration: string;
@@ -23,19 +24,33 @@ const UpdateCourse: React.FC = () => {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const { showAlert } = useAlert();
-  const course: Course = location.state?.course;
+  const course: any = location.state?.course;
+  const [categories, setCategories] = useState<{ id: number; name: string }[]>([]);
   const [formData, setFormData] = useState<Course | null>(null);
   const [imagePreview, setImagePreview] = useState<{ file?: File; url: string; isNew: boolean } | null>(null);
   const [bannerPreview, setBannerPreview] = useState<{ file?: File; url: string; isNew: boolean } | null>(null);
 
   useEffect(() => {
+    // Fetch categories
+    const fetchCategories = async () => {
+      try {
+        // You may need to import your fetchAllCategories service
+        const { fetchAllCategories } = await import("../../../services/courseService");
+        const cats = await fetchAllCategories();
+        setCategories(cats);
+      } catch (e) {}
+    };
+    fetchCategories();
     if (course) {
-      setFormData({ ...course });
+      setFormData({
+        ...course,
+        category: typeof course.category === 'object' && course.category ? course.category.id : course.category
+      });
       if (course.image) {
         setImagePreview({ url: course.image, isNew: false });
       }
-      if ((course as any).banner_image) {
-        setBannerPreview({ url: (course as any).banner_image, isNew: false });
+      if (course.banner_image) {
+        setBannerPreview({ url: course.banner_image, isNew: false });
       }
     }
   }, [course]);
@@ -91,13 +106,16 @@ const UpdateCourse: React.FC = () => {
     const data: any = new FormData();
     Object.entries(formData).forEach(([key, value]) => {
       if (value !== null && value !== undefined) {
-        if (key === 'category' && value && typeof value === 'object') {
-          data.append('category', value.id);
+        if (key === 'category') {
+          data.append('category', value); // send id only
         } else {
           data.append(key, value instanceof File ? value : String(value));
         }
       }
     });
+    // Add title and description as required
+    data.set('title', formData.full_name);
+    data.set('description', formData.summary);
     if (imagePreview && imagePreview.isNew && imagePreview.file) {
       data.append('image', imagePreview.file);
     } else {
@@ -161,12 +179,21 @@ const UpdateCourse: React.FC = () => {
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
-              <input
+              <select
                 name="category"
-                value={formData.category?.name || ''}
-                disabled
-                className="w-full px-4 py-2 border border-gray-300 rounded-md bg-gray-100"
-              />
+                value={formData.category || ''}
+                onChange={e => {
+                  const selectedId = Number(e.target.value);
+                  setFormData(prev => prev ? { ...prev, category: selectedId } : prev);
+                }}
+                required
+                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="">Select Category</option>
+                {categories.map(cat => (
+                  <option key={cat.id} value={cat.id}>{cat.name}</option>
+                ))}
+              </select>
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Price</label>

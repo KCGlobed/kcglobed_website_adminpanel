@@ -5,11 +5,12 @@ import Button from '../../../components/TextEditor/ui/Button';
 import { FaArrowLeft } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import { useAlert } from '../../../context/AlertContext';
+import { fetchAllCategories } from "../../../services/courseService";
 
 interface CourseForm {
     full_name: string;
     shortname: string;
-    category: string;
+    category: number;
     price: number;
     discount: number;
     duration: string;
@@ -31,10 +32,11 @@ const CreateCourse: React.FC = () => {
     const { loading } = useAppSelector(state => state.course)
     const { showAlert } = useAlert()
     const navigate = useNavigate()
+    const [categories, setCategories] = useState<{ id: number; name: string }[]>([]);
     const [formData, setFormData] = useState<CourseForm>({
         full_name: "",
         shortname: "",
-        category: "",
+        category: 0,
         price: 0,
         discount: 0,
         duration: "",
@@ -107,6 +109,7 @@ const CreateCourse: React.FC = () => {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        console.log(formData, 'formdata')
         const data: any = new FormData();
         Object.entries(formData).forEach(([key, value]) => {
             if (value !== null && value !== undefined) {
@@ -127,7 +130,17 @@ const CreateCourse: React.FC = () => {
             showAlert("Error creating course", 'error')
         }
     };
+    const getCategory = async () => {
+        try {
+            const categories = await fetchAllCategories()
+            setCategories(categories)
+        } catch (error) {
 
+        }
+    }
+    useEffect(() => {
+        getCategory()
+    }, [])
     return (
         <div className="max-w-8xl mx-auto p-6 bg-white rounded-lg shadow-sm border border-gray-100">
             <div className="flex items-center justify-between">  <h2 className="text-2xl font-semibold mb-6 text-gray-800 border-b pb-3 flex items-center">
@@ -172,13 +185,27 @@ const CreateCourse: React.FC = () => {
                         </div>
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
-                            <input
+                            <select
                                 name="category"
-                                value={formData.category}
-                                onChange={handleChange}
-                                placeholder="Category"
+                                value={formData.category || ''}
+                                onChange={e => {
+                                    const selectedId = Number(e.target.value);
+                                    setFormData(prev => ({
+                                        ...prev,
+                                        category: selectedId,
+                                    }));
+                                }}
+                                required
                                 className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            />
+                            >
+                                <option value="">Select Category</option>
+                                {categories.map(cat => (
+                                    <option key={cat.id} value={cat.id}>
+                                        {cat.name}
+                                    </option>
+                                ))}
+                            </select>
+
                         </div>
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">Price</label>
