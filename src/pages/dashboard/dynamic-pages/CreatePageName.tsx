@@ -17,7 +17,6 @@ interface PageFormData {
 }
 
 function CreatePageName() {
-    const location = useLocation()
     const { loading, data } = useAppSelector(state => state.pages)
     const dispatch = useAppDispatch()
     const { showAlert } = useAlert()
@@ -63,6 +62,7 @@ function CreatePageName() {
     useEffect(() => {
         dispatch(getAllPageNames())
     }, [dispatch])
+
     return (
         <div className="max-w-8xl mx-auto p-6 bg-white rounded-lg shadow-sm border border-gray-100">
             <div className="flex flex-wrap gap-4 w-full">

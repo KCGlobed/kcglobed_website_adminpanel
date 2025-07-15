@@ -232,16 +232,19 @@ export interface BookOrder {
 
 export interface ExcellenceSection {
   id: number;
-  page_type: string;
-  section_type: string;
+  page:number;
+  page_id: string;
+  section_type_id: string;
+  section_type: any;
   text_1: string;
   text_2: string;
   text_3: string | null;
+  order: string;
   description: string | null;
   slider_video: string | null;
   image: string | null;
   created_at: string;
-  sub_section: SubSection[];
+  section_list: SubSection[];
   mentors: any[];
 }
 
@@ -284,7 +287,7 @@ export interface BookProps {
   actions?: any
   is_bundle?: boolean
 }
-export interface Testimonial {
+export interface TestimonialProps {
   name: string
   image: string
   content: string
@@ -297,8 +300,8 @@ export interface Testimonial {
 
 
 export interface Testimonials {
-  student: Testimonial[]
-  placement: Testimonial[]
-  corporate: Testimonial[]
-  institutions: Testimonial[]
+  student: TestimonialProps[]
+  placement: TestimonialProps[]
+  corporate: TestimonialProps[]
+  institutions: TestimonialProps[]
 }

@@ -2,7 +2,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../../../hooks/useRedux';
 import DynamicServerTable, { type ColumnDefinition } from '../../../components/Table/Table';
 import { useEffect, useState } from 'react';
-import type { Testimonial } from '../../../utils/types';
+import type { TestimonialProps } from '../../../utils/types';
 import GlassButton from '../../../components/Button/Button';
 import { FiEdit, FiTrash } from 'react-icons/fi';
 import { getAllTestimonials, removeTestimonial } from '../../../store/slices/testimonialSlice';
@@ -32,12 +32,12 @@ function Testimonial() {
 
         }
     }
-    const columns: ColumnDefinition<Testimonial>[] = [
+    const columns: ColumnDefinition<TestimonialProps>[] = [
         { key: 'name', title: 'Name', align: 'left' },
         { key: 'qualification', title: 'Designation', align: 'center' },
         { key: 'college', title: 'College', align: 'center' },
         {
-            key: 'image', title: 'Profile', align: 'center', render: (_, row: Testimonial) => {
+            key: 'image', title: 'Profile', align: 'center', render: (_, row: TestimonialProps) => {
                 return <img src={row.image} alt={row.name} className='h-8 rounded-full w-8 mx-auto' />
             }
         },
@@ -47,7 +47,7 @@ function Testimonial() {
             key: 'actions',
             title: 'Actions',
             align: 'left',
-            render: (_, row: Testimonial) => (
+            render: (_, row: TestimonialProps) => (
                 <div className="flex space-x-2">
                     <GlassButton
                         onClick={() => handleNavigate(row)}
@@ -106,7 +106,7 @@ function Testimonial() {
                     </Link>
                 </div>
             </div>
-            <DynamicServerTable<Testimonial>
+            <DynamicServerTable<TestimonialProps>
                 data={paginatedTestimonials}
                 columns={columns}
                 currentPage={currentPage}

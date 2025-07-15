@@ -1,9 +1,9 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../../../hooks/useRedux';
-import { createPageData } from '../../../store/slices/pagesSlice';
 import LoadingToast from '../../../components/LoadingToast/LoadingToast';
-import { PAGE_TYPES, SECTION_TYPES } from '../../../utils/constants';
+import { createPage } from '../../../services/pages';
+import { getAllPageNames } from '../../../store/slices/pagesSlice';
 
 interface SubSection {
     title: string;
@@ -13,11 +13,12 @@ interface SubSection {
 }
 
 interface BannerFormData {
-    page_type: string;
-    section_type: string;
+    page_id: string;
+    section_id: string;
     text_1: string;
     text_2: string;
     text_3: string;
+    order: string;
     description: string | null;
     slider_video: File | null;
     image: File | null;
@@ -29,14 +30,14 @@ interface BannerFormData {
 const CreatePage: React.FC = () => {
     const navigate = useNavigate();
     const [error, setError] = useState<string | null>(null);
-    const { loading } = useAppSelector(state => state.pages)
-    const dispatch = useAppDispatch()
+    const { loading } = useAppSelector(state => state.pages);
     const [formData, setFormData] = useState<BannerFormData>({
-        page_type: 'homepage',
-        section_type: 'banner',
+        page_id: '',
+        section_id: '',
         text_1: '',
         text_2: '',
         text_3: '',
+        order: '0',
         description: null,
         slider_video: null,
         image: null,
@@ -46,9 +47,17 @@ const CreatePage: React.FC = () => {
     const sliderVideoRef = useRef<HTMLInputElement>(null);
     const imageRef = useRef<HTMLInputElement>(null);
     const subSectionImageRefs = useRef<(HTMLInputElement | null)[]>([]);
+    const dispatch = useAppDispatch();
+    const [subSec, setSubSec] = useState<any>([]);
+
+    const { data } = useAppSelector(state => state.pages)
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
+        if(name=="page_id"){
+            const selectedSec:any = data.find((val:any)=>val.id==value);
+            setSubSec(selectedSec.section_list);
+        }
         setFormData(prev => ({
             ...prev,
             [name]: value === '' ? null : value,
@@ -145,11 +154,12 @@ const CreatePage: React.FC = () => {
         setError(null);
         try {
             const formDataToSend = new FormData();
-            formDataToSend.append('page_type', formData.page_type);
-            formDataToSend.append('section_type', formData.section_type);
+            formDataToSend.append('page_id', formData.page_id);
+            formDataToSend.append('section_id', formData.section_id);
             formDataToSend.append('text_1', formData.text_1);
             formDataToSend.append('text_2', formData.text_2);
             formDataToSend.append('text_3', formData.text_3);
+            formDataToSend.append('order', formData.order);
 
             if (formData.description) {
                 formDataToSend.append('description', formData.description);
@@ -173,13 +183,24 @@ const CreatePage: React.FC = () => {
                     formDataToSend.append(`sub_section[${index}][image]`, subSection.image);
                 }
             });
-
-            dispatch(createPageData(formDataToSend as any));
+            
+            await createPage(formDataToSend);
+            history.back();
         } catch (err) {
             setError('Failed to submit form. Please try again.');
             console.error(err);
         }
     };
+
+    useEffect(()=>{
+        dispatch(getAllPageNames());
+    }, [])
+
+    useEffect(()=>{
+        if(data[0]?.section_list){
+            setSubSec(data[0]?.section_list);
+        }
+    }, [data])
 
     return (
         <>
@@ -187,7 +208,7 @@ const CreatePage: React.FC = () => {
                 message="Creating new page..."
                 isVisible={loading}
             />
-            <div className="max-w-4xl mx-auto p-6 bg-white rounded-lg shadow-md">
+            <div className="mx-auto p-6 bg-white rounded-lg shadow-md">
                 <h2 className="text-2xl font-bold mb-6">
                     Create New Banner
                 </h2>
@@ -206,15 +227,15 @@ const CreatePage: React.FC = () => {
                                 Page Type
                             </label>
                             <select
-                                name="page_type"
-                                value={formData.page_type}
+                                name="page_id"
+                                value={formData.page_id}
                                 onChange={handleInputChange}
                                 className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
                                 required
                             >
-                                {PAGE_TYPES.map(option => (
-                                    <option key={option.value} value={option.value}>
-                                        {option.label}
+                                {data.map(option => (
+                                    <option key={option.id} value={option.id}>
+                                        {option.page_type}
                                     </option>
                                 ))}
                             </select>
@@ -226,15 +247,15 @@ const CreatePage: React.FC = () => {
                                 Section Type
                             </label>
                             <select
-                                name="section_type"
-                                value={formData.section_type}
+                                name="section_id"
+                                value={formData.section_id}
                                 onChange={handleInputChange}
                                 className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
                                 required
                             >
-                                {SECTION_TYPES.map(option => (
-                                    <option key={option.value} value={option.value}>
-                                        {option.label}
+                                {subSec.map((option:any) => (
+                                    <option key={option.id} value={option.id}>
+                                        {option.section_type}
                                     </option>
                                 ))}
                             </select>
@@ -277,6 +298,19 @@ const CreatePage: React.FC = () => {
                                 type="text"
                                 name="text_3"
                                 value={formData.text_3}
+                                onChange={handleInputChange}
+                                className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                            />
+                        </div>
+
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Page Order
+                            </label>
+                            <input
+                                type="text"
+                                name="order"
+                                value={formData.order}
                                 onChange={handleInputChange}
                                 className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
                             />

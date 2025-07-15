@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { Link, useNavigate } from 'react-router-dom';
 import { Outlet } from 'react-router-dom';
@@ -22,6 +22,10 @@ const Dashboard: React.FC = () => {
   const toggleSubmenu = (menu: string) => {
     setOpenSubmenu(openSubmenu === menu ? null : menu);
   };
+
+  useEffect(()=>{
+    console.log("menuItems", menuItems);
+  }, [menuItems])
 
   return (
     <div className="flex bg-gray-100">

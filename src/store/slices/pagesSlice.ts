@@ -1,6 +1,6 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import type { Enquiry, ExcellenceSection } from "../../utils/types";
-import { createPage, createPageName, createSectionName, fetchPagesData, getAllPagesName, getAllSections, updatePage, updatePageName, updateSectionName } from "../../services/pages";
+import { createPage, deletePage, createPageName, createSectionName, fetchPagesData, getAllPagesName, getAllSections, updatePage, updatePageName, updateSectionName } from "../../services/pages";
 
 
 
@@ -36,24 +36,13 @@ export const getPagesData = createAsyncThunk<Enquiry, void, { rejectValue: strin
         }
     }
 );
-export const createPageData = createAsyncThunk<Enquiry, void, { rejectValue: string }>(
-    "pages/create",
-    async (payload, { rejectWithValue }) => {
-        try {
-            const data = await createPage(payload);
-            return data;
 
-        } catch (error: any) {
-            return rejectWithValue(error.message || "Failed to fetch blogs");
-        }
-    }
-);
-export const updatePageData = createAsyncThunk<Enquiry, void, { rejectValue: string }>(
-    "pages/update",
-    async (payload, { rejectWithValue }) => {
+export const deletePageData = createAsyncThunk<number, number, { rejectValue: string }>(
+    "pages/delete",
+    async (id:number, { rejectWithValue }) => {
         try {
-            const data = await updatePage(payload);
-            return data;
+            await deletePage(id);
+            return id;
 
         } catch (error: any) {
             return rejectWithValue(error.message || "Failed to fetch blogs");
@@ -183,27 +172,16 @@ const PagesSlice = createSlice({
                 state.loading = false;
                 state.error = action.payload || "Unknown error";
             })
-            .addCase(createPageData.pending, (state) => {
+            .addCase(deletePageData.pending, (state) => {
                 state.loading = true;
                 state.error = null;
             })
-            .addCase(createPageData.fulfilled, (state, action) => {
+            .addCase(deletePageData.fulfilled, (state, action) => {
                 state.loading = false;
-                state.data = (action.payload as any).results ?? action.payload;
+                console.log("action", action.payload)
+                state.data = state.data.filter((val)=>val.id!=action.payload);
             })
-            .addCase(createPageData.rejected, (state, action) => {
-                state.loading = false;
-                state.error = action.payload || "Unknown error";
-            })
-            .addCase(updatePageData.pending, (state) => {
-                state.loading = true;
-                state.error = null;
-            })
-            .addCase(updatePageData.fulfilled, (state, action) => {
-                state.loading = false;
-                state.data = (action.payload as any).results ?? action.payload;
-            })
-            .addCase(updatePageData.rejected, (state, action) => {
+            .addCase(deletePageData.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload || "Unknown error";
             })

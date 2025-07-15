@@ -34,7 +34,9 @@ const PAGE_TYPES = [
 
 const SECTION_TYPES = [
     { value: 'banner', label: 'Banner' },
-    { value: 'demo', label: 'Demo' },
+    { value: 'course_section', label: 'Course Section' },
+    { value: 'teee_section', label: 'Experience Educational Section' },
+    { value: 'demo3', label: 'Demo3' },
 ];
 
 export { PAGE_TYPES, SECTION_TYPES }

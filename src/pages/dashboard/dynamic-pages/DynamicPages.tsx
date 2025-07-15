@@ -3,38 +3,39 @@ import type { ColumnDefinition } from '../../../components/Table/Table';
 import DynamicServerTable from '../../../components/Table/Table';
 import type { ExcellenceSection } from '../../../utils/types';
 import { useAppDispatch, useAppSelector } from '../../../hooks/useRedux';
-import { getPagesData } from '../../../store/slices/pagesSlice';
+import { deletePageData, getPagesData } from '../../../store/slices/pagesSlice';
 import { useNavigate } from 'react-router-dom';
 import Button from '../../../components/TextEditor/ui/Button';
 import GlassButton from '../../../components/Button/Button';
 import { FiEdit, FiTrash } from 'react-icons/fi';
 import { formatDate } from '../../../utils';
+import { useAlert } from '../../../context/AlertContext';
 
 const DynamicPages: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const { data, loading } = useAppSelector((state) => state.pages);
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
+   const { showConfirm, showAlert } = useAlert();
 
   const handleEdit = (id: string|number, row: ExcellenceSection) => {
     navigate(`/dashboard/dynamic-page/edit/${id}`, { state: { pageData: row } });
   };
 
-  const handleDelete = (id: string|number) => {
-    // confirmAlert({
-    //   title: 'Confirm to delete',
-    //   message: 'Are you sure you want to delete this item?',
-    //   buttons: [
-    //     {
-    //       label: 'Yes',
-    //       onClick: () => dispatch(deletePageData(id))
-    //     },
-    //     {
-    //       label: 'No',
-    //       onClick: () => { }
-    //     }
-    //   ]
-    // });
+  const handleDelete = (id: number) => {
+    showConfirm({
+      message: "Are you sure you want to delete?",
+      onConfirm: async () => {
+          try {
+              await dispatch(deletePageData(id))
+              showAlert("Blog Deleted Successfully...", "success");
+          } catch (e: any) {
+              showAlert("Something Went Wrong...", "error");
+          }
+
+      },
+      onCancel: () => showAlert("Cancelled", "info"),
+  });
   };
 
   const handleCreateNew = () => {
@@ -42,8 +43,12 @@ const DynamicPages: React.FC = () => {
   };
 
   const excellenceColumns: ColumnDefinition<ExcellenceSection>[] = useMemo(() => [
-    { key: 'page_type', title: 'Page Type', align: 'center' },
-    { key: 'section_type', title: 'Section Type', align: 'center' },
+    { key: 'order', title: 'Page Order', align: 'center' },
+    { key: 'section_type', title: 'Section Type', align: 'center', 
+      render: (_, row) =>{
+        return row.section_type?.section_type
+      }
+    },
     { key: 'text_1', title: 'Text 1', align: 'left' },
     { key: 'text_2', title: 'Text 2', align: 'left' },
     { key: 'text_3', title: 'Text 3', align: 'left' },

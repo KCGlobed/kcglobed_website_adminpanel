@@ -4,9 +4,8 @@ export const menuItems = [
     name: 'Dynamic Pages',
     icon: <FaUsers className="mr-2" />,
     submenu: [
-      { name: 'Home Page', path: '/dashboard/dynamic-pages' },
-      { name: "Course Page", path: '/dashboard/dynamic-pages' },
-      { name: "Pages", path: '/dashboard/dynamic-pages/names' }
+      { name: 'Add Section Data', path: '/dashboard/dynamic-pages' },
+      { name: "Add Pages & Sections", path: '/dashboard/dynamic-pages/names' }
 
     ]
   },

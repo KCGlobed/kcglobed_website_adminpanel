@@ -42,9 +42,6 @@ export const updateBlog = async (id: string | number, payload: FormData): Promis
     return await apiRequest(`notes/edit-blog/${id}`, 'POST', payload);
 }
 
-export const viewBlog = async (id: number): Promise<any> => {
-    return await apiRequest(`notes/view-blog-detail/${id}`, 'GET');
-}
-export const deleteBlog = async (id: number): Promise<any> => {
-    return await apiRequest(`notes/delete-blog/${id}`, 'DELETE');
+export const deletePage = async (id: number): Promise<any> => {
+  return await apiRequest(`landing-page/delete-section/${id}`, 'DELETE');
 }

@@ -4,22 +4,9 @@ import { useAppDispatch, useAppSelector } from '../../../hooks/useRedux';
 import { FaArrowLeft, FaSave, FaTrash, FaPlus } from 'react-icons/fa';
 import Button from '../../../components/TextEditor/ui/Button';
 import type { ExcellenceSection } from '../../../utils/types';
-import { updatePageData } from '../../../store/slices/pagesSlice';
 import LoadingToast from '../../../components/LoadingToast/LoadingToast';
-
-// Predefined options
-const PAGE_TYPES = [
-    { value: 'homepage', label: 'Homepage' },
-    { value: 'coursepage', label: 'Course Page' },
-    { value: 'aboutpage', label: 'About Page' },
-];
-
-const SECTION_TYPES = [
-    { value: 'banner', label: 'Banner' },
-    { value: 'featured', label: 'Featured Section' },
-    { value: 'testimonial', label: 'Testimonial Section' },
-    { value: 'partner_section', label: 'Partner Section' },
-];
+import { updatePage } from '../../../services/pages';
+import { getAllPageNames } from '../../../store/slices/pagesSlice';
 
 interface SubSection {
     id?: number;
@@ -35,16 +22,18 @@ interface LocationState {
 
 const UpdatePage: React.FC = () => {
     const { state } = useLocation();
-    const { loading } = useAppSelector(state => state.pages);
+    const { loading, data } = useAppSelector(state => state.pages)
     const { pageData } = state as LocationState;
-    const dispatch = useAppDispatch();
     const navigate = useNavigate();
     const param = useParams();
     const [error, setError] = useState<string | null>(null);
-    console.log('Page Data:', pageData);
+    const dispatch = useAppDispatch()
+    const [subSec, setSubSec] = useState<any>([]);
+    const [subSectionData, setSubSectionData] = useState<any>([]);
+    
     const [formData, setFormData] = useState({
-        page_type: pageData.page_type,
-        section_type: pageData.section_type,
+        page_id: pageData.page_id,
+        section_id: pageData.section_type_id,
         text_1: pageData.text_1,
         text_2: pageData.text_2,
         text_3: pageData.text_3 || '',
@@ -53,6 +42,7 @@ const UpdatePage: React.FC = () => {
         image: null as File | null,
         existingSliderVideo: pageData.slider_video,
         existingImage: pageData.image,
+        order: pageData.order,
         sub_section: pageData.sub_section?.map(sub => ({
             ...sub,
             image: null,
@@ -64,8 +54,23 @@ const UpdatePage: React.FC = () => {
     const imageRef = useRef<HTMLInputElement>(null);
     const subSectionImageRefs = useRef<(HTMLInputElement | null)[]>([]);
 
+    useEffect(() => {
+        dispatch(getAllPageNames())
+    }, [dispatch])
+
+    useEffect(()=>{
+        if(data.length){
+            const selectedSec:any = data.find((sec:any)=> sec.id == pageData.page_id);
+            setSubSec(selectedSec ? selectedSec.section_list : []);
+        }
+    }, [data])
+
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
+        if(name=="page_id"){
+            const selectedSec:any = data.find((val:any)=>val.id==value);
+            setSubSec(selectedSec.section_list);
+        }
         setFormData(prev => ({ ...prev, [name]: value }));
     };
 
@@ -97,6 +102,8 @@ const UpdatePage: React.FC = () => {
             ...updatedSubSections[index],
             [name]: value
         };
+        setSubSectionData(updatedSubSections);
+        console.log("updatedSubSections", updatedSubSections);
         setFormData(prev => ({
             ...prev,
             sub_section: updatedSubSections
@@ -155,11 +162,12 @@ const UpdatePage: React.FC = () => {
         setError(null);
         try {
             const formDataToSend = new FormData();
-            formDataToSend.append('page_type', formData.page_type);
-            formDataToSend.append('section_type', formData.section_type);
+            formDataToSend.append('page_id', formData.page_id);
+            formDataToSend.append('section_id', formData.section_id);
             formDataToSend.append('text_1', formData.text_1);
             formDataToSend.append('text_2', formData.text_2);
             formDataToSend.append('text_3', formData.text_3);
+            formDataToSend.append('order', formData.order);
             formDataToSend.append('description', formData.description);
 
             if (formData.slider_video) {
@@ -186,7 +194,8 @@ const UpdatePage: React.FC = () => {
                 return;
             }
             // console.log('Form Data to Send:', formData);
-            await dispatch(updatePageData({ id: param.id, formData: formDataToSend }));
+            await updatePage({ id: param.id, formData: formDataToSend });
+            history.back();
         } catch (err) {
             setError('Failed to update page. Please try again.');
             console.error(err);
@@ -224,15 +233,15 @@ const UpdatePage: React.FC = () => {
                                 Page Type
                             </label>
                             <select
-                                name="page_type"
-                                value={formData.page_type}
+                                name="page_id"
+                                value={formData.page_id}
                                 onChange={handleChange}
                                 className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
                                 required
                             >
-                                {PAGE_TYPES.map(option => (
-                                    <option key={option.value} value={option.value}>
-                                        {option.label}
+                                {data.map((option:any) => (
+                                    <option key={option.id} value={option.id}>
+                                        {option.page_type}
                                     </option>
                                 ))}
                             </select>
@@ -244,15 +253,15 @@ const UpdatePage: React.FC = () => {
                                 Section Type
                             </label>
                             <select
-                                name="section_type"
-                                value={formData.section_type}
+                                name="section_id"
+                                value={formData.section_id}
                                 onChange={handleChange}
                                 className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
                                 required
                             >
-                                {SECTION_TYPES.map(option => (
-                                    <option key={option.value} value={option.value}>
-                                        {option.label}
+                                {subSec.map((option:any) => (
+                                    <option key={option.id} value={option.id}>
+                                        {option.section_type}
                                     </option>
                                 ))}
                             </select>
@@ -295,6 +304,19 @@ const UpdatePage: React.FC = () => {
                                 type="text"
                                 name="text_3"
                                 value={formData.text_3}
+                                onChange={handleChange}
+                                className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                            />
+                        </div>
+
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Page Order
+                            </label>
+                            <input
+                                type="text"
+                                name="order"
+                                value={formData.order}
                                 onChange={handleChange}
                                 className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
                             />
