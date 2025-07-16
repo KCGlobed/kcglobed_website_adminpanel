@@ -29,7 +29,6 @@ const UpdatePage: React.FC = () => {
     const [error, setError] = useState<string | null>(null);
     const dispatch = useAppDispatch()
     const [subSec, setSubSec] = useState<any>([]);
-    const [subSectionData, setSubSectionData] = useState<any>([]);
     
     const [formData, setFormData] = useState({
         page_id: pageData.page_id,
@@ -102,7 +101,6 @@ const UpdatePage: React.FC = () => {
             ...updatedSubSections[index],
             [name]: value
         };
-        setSubSectionData(updatedSubSections);
         setFormData(prev => ({
             ...prev,
             sub_section: updatedSubSections
@@ -178,7 +176,7 @@ const UpdatePage: React.FC = () => {
                 formDataToSend.append('image', formData.image);
             }
 
-            subSectionData.forEach((item:any, index:number) => {
+            formData.sub_section.forEach((item:any, index:number) => {
                 subSecFormData.append(`section_data[${index}][title]`, item.title);
                 subSecFormData.append(`section_data[${index}][description]`, item.description);
                 subSecFormData.append(`section_data[${index}][main_id]`, pageData.id.toString());
