@@ -1,7 +1,7 @@
 import { apiRequest } from "./apiRequest";
 
-export const fetchPagesData = (): Promise<any> => {
-    return apiRequest(`landing-page/get-homepage-content`, "GET");
+export const fetchPagesData = (currentPage: any): Promise<any> => {
+    return apiRequest(`landing-page/get-homepage-content?page=${currentPage}`, "GET");
 };
 export const getAllPagesName = (): Promise<any> => {
     return apiRequest(`landing-page/get-page-list/`, "GET");
@@ -42,6 +42,6 @@ export const updateBlog = async (id: string | number, payload: FormData): Promis
     return await apiRequest(`notes/edit-blog/${id}`, 'POST', payload);
 }
 
-export const deletePage = async (id: number): Promise<any> => {
-  return await apiRequest(`landing-page/delete-section/${id}`, 'DELETE');
+export const deleteSection = async (id: number): Promise<any> => {
+    return await apiRequest(`landing-page/delete-section/${id}`, 'DELETE');
 }
