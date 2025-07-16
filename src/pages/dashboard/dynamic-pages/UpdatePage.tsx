@@ -5,14 +5,14 @@ import { FaArrowLeft, FaSave, FaTrash, FaPlus } from 'react-icons/fa';
 import Button from '../../../components/TextEditor/ui/Button';
 import type { ExcellenceSection } from '../../../utils/types';
 import LoadingToast from '../../../components/LoadingToast/LoadingToast';
-import { updatePage } from '../../../services/pages';
+import { updatePage, updateSubSec } from '../../../services/pages';
 import { getAllPageNames } from '../../../store/slices/pagesSlice';
 
 interface SubSection {
     id?: number;
     title: string;
     description: string;
-    image: File | null;
+    image: any;
     existingImage?: string;
 }
 
@@ -103,7 +103,6 @@ const UpdatePage: React.FC = () => {
             [name]: value
         };
         setSubSectionData(updatedSubSections);
-        console.log("updatedSubSections", updatedSubSections);
         setFormData(prev => ({
             ...prev,
             sub_section: updatedSubSections
@@ -162,6 +161,7 @@ const UpdatePage: React.FC = () => {
         setError(null);
         try {
             const formDataToSend = new FormData();
+            const subSecFormData = new FormData();
             formDataToSend.append('page_id', formData.page_id);
             formDataToSend.append('section_id', formData.section_id);
             formDataToSend.append('text_1', formData.text_1);
@@ -178,14 +178,15 @@ const UpdatePage: React.FC = () => {
                 formDataToSend.append('image', formData.image);
             }
 
-            formData.sub_section.forEach((subSection, index) => {
-                formDataToSend.append(`sub_section[${index}][title]`, subSection.title);
-                formDataToSend.append(`sub_section[${index}][description]`, subSection.description);
-                if (subSection.image) {
-                    formDataToSend.append(`sub_section[${index}][image]`, subSection.image);
+            subSectionData.forEach((item:any, index:number) => {
+                subSecFormData.append(`section_data[${index}][title]`, item.title);
+                subSecFormData.append(`section_data[${index}][description]`, item.description);
+                subSecFormData.append(`section_data[${index}][main_id]`, pageData.id.toString());
+                if (item.image) {
+                    subSecFormData.append(`section_data[${index}][image]`, item.image);
                 }
-                if (subSection.id) {
-                    formDataToSend.append(`sub_section[${index}][id]`, subSection.id.toString());
+                if (item.id) {
+                    subSecFormData.append(`section_data[${index}][id]`, item.id.toString());
                 }
             });
 
@@ -193,8 +194,8 @@ const UpdatePage: React.FC = () => {
                 setError('Page ID is missing');
                 return;
             }
-            // console.log('Form Data to Send:', formData);
             await updatePage({ id: param.id, formData: formDataToSend });
+            await updateSubSec({formData : subSecFormData});
             history.back();
         } catch (err) {
             setError('Failed to update page. Please try again.');

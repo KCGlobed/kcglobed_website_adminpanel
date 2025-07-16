@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../../../hooks/useRedux';
 import LoadingToast from '../../../components/LoadingToast/LoadingToast';
-import { createPage } from '../../../services/pages';
+import { createPage, updateSubSec } from '../../../services/pages';
 import { getAllPageNames } from '../../../store/slices/pagesSlice';
 
 interface SubSection {
@@ -49,6 +49,7 @@ const CreatePage: React.FC = () => {
     const subSectionImageRefs = useRef<(HTMLInputElement | null)[]>([]);
     const dispatch = useAppDispatch();
     const [subSec, setSubSec] = useState<any>([]);
+    const [subSectionData, setSubSectionData] = useState<any>([]);
 
     const { data } = useAppSelector(state => state.pages)
 
@@ -90,11 +91,13 @@ const CreatePage: React.FC = () => {
 
     const handleSubSectionInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>, index: number) => {
         const { name, value } = e.target;
-        const updatedSubSections = [...formData.sub_section];
+        const updatedSubSections:any = [...formData.sub_section];
         updatedSubSections[index] = {
             ...updatedSubSections[index],
-            [name]: value === '' ? null : value
+            [name]: value === '' ? null : value,
+            main_id : formData.section_id
         };
+        setSubSectionData(updatedSubSections);
         setFormData(prev => ({
             ...prev,
             sub_section: updatedSubSections
@@ -154,6 +157,7 @@ const CreatePage: React.FC = () => {
         setError(null);
         try {
             const formDataToSend = new FormData();
+            const subSecFormData = new FormData();
             formDataToSend.append('page_id', formData.page_id);
             formDataToSend.append('section_id', formData.section_id);
             formDataToSend.append('text_1', formData.text_1);
@@ -173,18 +177,19 @@ const CreatePage: React.FC = () => {
                 formDataToSend.append('image', formData.image);
             }
 
-            // Append sub sections
-            formData.sub_section.forEach((subSection, index) => {
-                formDataToSend.append(`sub_section[${index}][title]`, subSection.title);
-                if (subSection.description) {
-                    formDataToSend.append(`sub_section[${index}][description]`, subSection.description);
+            subSectionData.forEach((item:any, index:number) => {
+                subSecFormData.append(`item[${index}][title]`, item.title);
+                subSecFormData.append(`item[${index}][description]`, item.description);
+                if (item.image) {
+                    subSecFormData.append(`item[${index}][image]`, item.image);
                 }
-                if (subSection.image) {
-                    formDataToSend.append(`sub_section[${index}][image]`, subSection.image);
+                if (item.id) {
+                    subSecFormData.append(`item[${index}][id]`, item.id.toString());
                 }
             });
             
             await createPage(formDataToSend);
+            await updateSubSec({formData : subSecFormData});
             history.back();
         } catch (err) {
             setError('Failed to submit form. Please try again.');
