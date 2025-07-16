@@ -3,12 +3,13 @@ import type { ColumnDefinition } from '../../../components/Table/Table';
 import DynamicServerTable from '../../../components/Table/Table';
 import type { ExcellenceSection as ExcellenceSectionBase } from '../../../utils/types';
 import { useAppDispatch, useAppSelector } from '../../../hooks/useRedux';
-import { getPagesData } from '../../../store/slices/pagesSlice';
+import { deletePageData, getPagesData } from '../../../store/slices/pagesSlice';
 import { useNavigate } from 'react-router-dom';
 import Button from '../../../components/TextEditor/ui/Button';
 import GlassButton from '../../../components/Button/Button';
 import { FiEdit, FiTrash } from 'react-icons/fi';
 import { formatDate } from '../../../utils';
+import { useAlert } from '../../../context/AlertContext';
 
 // Add index signature for dynamic key access
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -17,7 +18,8 @@ interface ExcellenceSection extends ExcellenceSectionBase { [key: string]: any }
 const DynamicPages: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedPageType, setSelectedPageType] = useState<string>('');
-  const { data, loading } = useAppSelector((state) => state.pages);
+  const { data, loading, count } = useAppSelector((state) => state.pages);
+  const { showConfirm } = useAlert()
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
 
@@ -26,20 +28,11 @@ const DynamicPages: React.FC = () => {
   };
 
   const handleDelete = (id: string | number) => {
-    // confirmAlert({
-    //   title: 'Confirm to delete',
-    //   message: 'Are you sure you want to delete this item?',
-    //   buttons: [
-    //     {
-    //       label: 'Yes',
-    //       onClick: () => dispatch(deletePageData(id))
-    //     },
-    //     {
-    //       label: 'No',
-    //       onClick: () => { }
-    //     }
-    //   ]
-    // });
+    showConfirm({
+      message: 'Are you sure you want to delete this item?',
+      onConfirm: () => dispatch(deletePageData(id as any)),
+      onCancel: () => { },
+    });
   };
 
   const handleCreateNew = () => {
@@ -125,8 +118,8 @@ const DynamicPages: React.FC = () => {
   ], [handleEdit, handleDelete]);
 
   useEffect(() => {
-    dispatch(getPagesData());
-  }, [dispatch]);
+    dispatch(getPagesData(currentPage as any));
+  }, [dispatch, currentPage]);
 
   return (
     <div className='overflow-x-hidden'>
@@ -158,7 +151,7 @@ const DynamicPages: React.FC = () => {
         currentPage={currentPage}
         pageSize={20}
         loading={loading}
-        totalCount={filteredData.length}
+        totalCount={count}
         onPageChange={setCurrentPage}
       />
     </div>

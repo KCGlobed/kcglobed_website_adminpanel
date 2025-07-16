@@ -1,6 +1,6 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import type { Enquiry, ExcellenceSection } from "../../utils/types";
-import { createPage, deletePage, createPageName, createSectionName, fetchPagesData, getAllPagesName, getAllSections, updatePage, updatePageName, updateSectionName } from "../../services/pages";
+import { createPage, deleteSection, createPageName, createSectionName, fetchPagesData, getAllPagesName, getAllSections, updatePage, updatePageName, updateSectionName } from "../../services/pages";
 
 
 
@@ -26,9 +26,9 @@ const initialState: DynamicPageState = {
 
 export const getPagesData = createAsyncThunk<Enquiry, void, { rejectValue: string }>(
     "pages/",
-    async (_, { rejectWithValue }) => {
+    async (currentPage, { rejectWithValue }) => {
         try {
-            const data = await fetchPagesData();
+            const data = await fetchPagesData(currentPage);
             return data;
 
         } catch (error: any) {
@@ -39,9 +39,9 @@ export const getPagesData = createAsyncThunk<Enquiry, void, { rejectValue: strin
 
 export const deletePageData = createAsyncThunk<number, number, { rejectValue: string }>(
     "pages/delete",
-    async (id:number, { rejectWithValue }) => {
+    async (id: number, { rejectWithValue }) => {
         try {
-            await deletePage(id);
+            await deleteSection(id);
             return id;
 
         } catch (error: any) {
@@ -140,7 +140,7 @@ const PagesSlice = createSlice({
             })
             .addCase(getPagesData.fulfilled, (state, action) => {
                 state.loading = false;
-                console.log(action, "action")
+                state.count = (action.payload as any).count;
                 state.data = (action.payload as any).results ?? action.payload;
             })
             .addCase(getPagesData.rejected, (state, action) => {
@@ -179,7 +179,7 @@ const PagesSlice = createSlice({
             .addCase(deletePageData.fulfilled, (state, action) => {
                 state.loading = false;
                 console.log("action", action.payload)
-                state.data = state.data.filter((val)=>val.id!=action.payload);
+                state.data = state.data.filter((val) => val.id != action.payload);
             })
             .addCase(deletePageData.rejected, (state, action) => {
                 state.loading = false;
