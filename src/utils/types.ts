@@ -244,7 +244,7 @@ export interface ExcellenceSection {
   slider_video: string | null;
   image: string | null;
   created_at: string;
-  section_list: SubSection[];
+  sub_section: SubSection[];
   mentors: any[];
 }
 

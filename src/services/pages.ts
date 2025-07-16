@@ -30,6 +30,10 @@ export const updatePage = async (payload: any): Promise<any> => {
     return await apiRequest(`landing-page/update-section-data/${payload.id}`, 'POST', payload.formData);
 };
 
+export const updateSubSec = async (payload: any): Promise<any> => {
+    return await apiRequest(`landing-page/update-sub-section-data/`, 'POST', payload.formData);
+};
+
 export const updatePageName = async (id: string | number, payload: any): Promise<any> => {
     return await apiRequest(`landing-page/update-page/${id}`, 'POST', payload);
 };
