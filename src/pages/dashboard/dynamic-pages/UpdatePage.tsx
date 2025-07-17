@@ -508,7 +508,7 @@ const UpdatePage: React.FC = () => {
                                                 <img
                                                     src={URL.createObjectURL(subSection.image)}
                                                     alt="Selected sub-section image"
-                                                    className="w-full max-w-md rounded-md border"
+                                                    className="w-[100px] rounded-md border"
                                                     style={{ maxHeight: '200px', objectFit: 'cover' }}
                                                 />
                                             </div>
@@ -519,7 +519,7 @@ const UpdatePage: React.FC = () => {
                                                 <img
                                                     src={subSection.existingImage}
                                                     alt="Current sub-section image"
-                                                    className="w-full max-w-md rounded-md border"
+                                                    className="w-[100px] rounded-md border"
                                                     style={{ maxHeight: '200px', objectFit: 'cover' }}
                                                 />
                                             </div>
