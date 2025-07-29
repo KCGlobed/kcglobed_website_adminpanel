@@ -2,7 +2,12 @@ import React from 'react'
 import { useForm } from 'react-hook-form'
 import Button from '../../../components/TextEditor/ui/Button'
 import { useAppDispatch, useAppSelector } from '../../../hooks/useRedux'
-import { updatePageNameData, updateSectionNameData, getAllPageNames, getAllSection } from '../../../store/slices/pagesSlice'
+import {
+    updatePageNameData,
+    updateSectionNameData,
+    getAllPageNames,
+    getAllSection
+} from '../../../store/slices/pagesSlice'
 import { useAlert } from '../../../context/AlertContext'
 
 const FormError = ({ error }: { error?: string }) =>
@@ -10,6 +15,11 @@ const FormError = ({ error }: { error?: string }) =>
 
 interface PageFormData {
     page_type: string
+    meta_title?: string
+    meta_description?: string
+    meta_keyword?: string
+    canonical_url?: string
+    schema_markup?: string
 }
 
 interface SectionFormData {
@@ -35,7 +45,16 @@ const UpdatePageSectionName: React.FC<UpdatePageSectionNameProps> = ({ type, edi
         handleSubmit: handleSubmitPage,
         setValue: setValuePage,
         formState: { errors: errorsPage }
-    } = useForm<PageFormData>({ defaultValues: { page_type: editingItem?.page_type || '' } })
+    } = useForm<PageFormData>({
+        defaultValues: {
+            page_type: editingItem?.page_type || '',
+            meta_title: editingItem?.meta_title || '',
+            meta_description: editingItem?.meta_description || '',
+            meta_keyword: editingItem?.meta_keyword || '',
+            canonical_url: editingItem?.canonical_url || '',
+            schema_markup: editingItem?.schema_markup || '',
+        }
+    })
 
     // Section form
     const {
@@ -51,10 +70,15 @@ const UpdatePageSectionName: React.FC<UpdatePageSectionNameProps> = ({ type, edi
     })
 
     React.useEffect(() => {
-        if (type === 'page' && editingItem) {
-            setValuePage('page_type', editingItem.page_type)
-        } else if (type === 'section' && editingItem) {
-            setValueSection('section_type', editingItem.section_type)
+        if (type === 'page') {
+            setValuePage('page_type', editingItem.page_type || '')
+            setValuePage('meta_title', editingItem.meta_title || '')
+            setValuePage('meta_description', editingItem.meta_description || '')
+            setValuePage('meta_keyword', editingItem.meta_keyword || '')
+            setValuePage('canonical_url', editingItem.canonical_url || '')
+            setValuePage('schema_markup', editingItem.schema_markup || '')
+        } else if (type === 'section') {
+            setValueSection('section_type', editingItem.section_type || '')
             setValueSection('page_type', editingItem.page_info?.id || '')
         }
     }, [editingItem, setValuePage, setValueSection, type])
@@ -83,19 +107,56 @@ const UpdatePageSectionName: React.FC<UpdatePageSectionNameProps> = ({ type, edi
 
     if (type === 'page') {
         return (
-            <div className="space-y-4">
+            <form onSubmit={handleSubmitPage(onSubmitPage)} className="space-y-4">
                 <div>
-                    <label htmlFor="page_type" className="block text-sm font-medium text-gray-700 mb-1">
-                        Page Type
-                    </label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Page Type</label>
                     <input
-                        id="page_type"
-                        type="text"
-                        className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${errorsPage.page_type ? 'border-red-500' : 'border-gray-300'}`}
                         {...registerPage('page_type', { required: 'Page type is required' })}
+                        className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${errorsPage.page_type ? 'border-red-500' : 'border-gray-300'}`}
                     />
                     <FormError error={errorsPage.page_type?.message} />
                 </div>
+
+                <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Meta Title</label>
+                    <input
+                        {...registerPage('meta_title')}
+                        className="w-full px-3 py-2 border-gray-300 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                </div>
+
+                <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Meta Description</label>
+                    <textarea
+                        {...registerPage('meta_description')}
+                        className="w-full px-3 py-2 border-gray-300 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                </div>
+
+                <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Meta Keywords (comma-separated)</label>
+                    <input
+                        {...registerPage('meta_keyword')}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                </div>
+
+                <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Canonical URL</label>
+                    <input
+                        {...registerPage('canonical_url')}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                </div>
+
+                <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Schema Markup</label>
+                    <textarea
+                        {...registerPage('schema_markup')}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                </div>
+
                 <div className="flex justify-end space-x-3 pt-4">
                     <button
                         type="button"
@@ -104,21 +165,17 @@ const UpdatePageSectionName: React.FC<UpdatePageSectionNameProps> = ({ type, edi
                     >
                         Cancel
                     </button>
-                    <Button
-                        onClick={handleSubmitPage(onSubmitPage)}
-                        disabled={loading}
-                        className="bg-blue-600 hover:bg-blue-700"
-                    >
+                    <Button type="submit" disabled={loading}>
                         {loading ? 'Updating...' : 'Update Page'}
                     </Button>
                 </div>
-            </div>
+            </form>
         )
     }
 
     // Section form
     return (
-        <div className="space-y-4">
+        <form onSubmit={handleSubmitSection(onSubmitSection)} className="space-y-4">
             <div>
                 <label htmlFor="page_type_select" className="block text-sm font-medium text-gray-700 mb-1">
                     Page Type
@@ -135,6 +192,7 @@ const UpdatePageSectionName: React.FC<UpdatePageSectionNameProps> = ({ type, edi
                 </select>
                 <FormError error={errorsSection.page_type?.message} />
             </div>
+
             <div>
                 <label htmlFor="section_type" className="block text-sm font-medium text-gray-700 mb-1">
                     Section Type
@@ -156,15 +214,11 @@ const UpdatePageSectionName: React.FC<UpdatePageSectionNameProps> = ({ type, edi
                 >
                     Cancel
                 </button>
-                <Button
-                    onClick={handleSubmitSection(onSubmitSection)}
-                    disabled={loading}
-                    className="bg-blue-600 hover:bg-blue-700"
-                >
+                <Button type="submit" disabled={loading}>
                     {loading ? 'Updating...' : 'Update Section'}
                 </Button>
             </div>
-        </div>
+        </form>
     )
 }
 

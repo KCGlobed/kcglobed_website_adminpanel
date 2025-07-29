@@ -13,7 +13,12 @@ const FormError = ({ error }: { error?: string }) =>
 // Form data type
 interface PageFormData {
     page_type: string
-    section_type: string
+    section_type?: string
+    meta_title: string
+    meta_description: string
+    meta_keyword: string
+    canonical_url: string
+    schema_markup: string
 }
 
 function CreatePageName() {
@@ -31,7 +36,11 @@ function CreatePageName() {
     } = useForm<PageFormData>({
         defaultValues: {
             page_type: '',
-            section_type: ''
+            meta_title: '',
+            meta_description: '',
+            meta_keyword: '',
+            canonical_url: '',
+            schema_markup: ''
         }
     })
 
@@ -59,6 +68,7 @@ function CreatePageName() {
         showAlert("Page name created successfully")
         dispatch(getAllPageNames())
     }
+
     useEffect(() => {
         dispatch(getAllPageNames())
     }, [dispatch])
@@ -107,13 +117,15 @@ function CreatePageName() {
                 </form>
                 {/* Form 2: Text-input-based page_type */}
                 <form onSubmit={handleSubmitText(onSubmitText)} className="flex-1 bg-gray-50 rounded p-6">
-                    <h2 className="text-2xl font-bold mb-4">
-                        Create New Page
-                    </h2>
+                    <h2 className="text-2xl font-bold mb-4">Create New Page</h2>
+
+                    {/* Common Tailwind class for input fields */}
+                    {/** You could even move this into a utility if reused elsewhere **/}
+                    {/** Or just repeat inline like here **/}
+
+                    {/* Page Type */}
                     <div className="mb-4">
-                        <label htmlFor="page_type_text" className="block text-sm font-medium text-gray-700 mb-1">
-                            Page Type
-                        </label>
+                        <label htmlFor="page_type_text" className="block text-sm font-medium text-gray-700 mb-1">Page Type</label>
                         <input
                             id="page_type_text"
                             type="text"
@@ -122,12 +134,74 @@ function CreatePageName() {
                         />
                         <FormError error={errorsText.page_type?.message} />
                     </div>
+
+                    {/* Meta Title */}
+                    <div className="mb-4">
+                        <label htmlFor="meta_title" className="block text-sm font-medium text-gray-700 mb-1">Meta Title</label>
+                        <input
+                            id="meta_title"
+                            type="text"
+                            className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${errorsText.meta_title ? 'border-red-500' : 'border-gray-300'}`}
+                            {...registerText('meta_title', { required: 'Meta title is required' })}
+                        />
+                        <FormError error={errorsText.meta_title?.message} />
+                    </div>
+
+                    {/* Meta Description */}
+                    <div className="mb-4">
+                        <label htmlFor="meta_description" className="block text-sm font-medium text-gray-700 mb-1">Meta Description</label>
+                        <textarea
+                            id="meta_description"
+                            className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${errorsText.meta_description ? 'border-red-500' : 'border-gray-300'}`}
+                            {...registerText('meta_description', { required: 'Meta description is required' })}
+                        />
+                        <FormError error={errorsText.meta_description?.message} />
+                    </div>
+
+                    {/* Meta Keywords */}
+                    <div className="mb-4">
+                        <label htmlFor="meta_keyword" className="block text-sm font-medium text-gray-700 mb-1">Meta Keywords (comma-separated)</label>
+                        <input
+                            id="meta_keyword"
+                            type="text"
+                            placeholder="e.g., blog,react,seo"
+                            className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${errorsText.meta_keyword ? 'border-red-500' : 'border-gray-300'}`}
+                            {...registerText('meta_keyword', { required: 'Meta keywords are required' })}
+                        />
+                        <FormError error={errorsText.meta_keyword?.message} />
+                    </div>
+
+                    {/* Canonical URL */}
+                    <div className="mb-4">
+                        <label htmlFor="canonical_url" className="block text-sm font-medium text-gray-700 mb-1">Canonical URL</label>
+                        <input
+                            id="canonical_url"
+                            type="text"
+                            className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${errorsText.canonical_url ? 'border-red-500' : 'border-gray-300'}`}
+                            {...registerText('canonical_url', { required: 'Canonical URL is required' })}
+                        />
+                        <FormError error={errorsText.canonical_url?.message} />
+                    </div>
+
+                    {/* Schema Markup */}
+                    <div className="mb-4">
+                        <label htmlFor="schema_markup" className="block text-sm font-medium text-gray-700 mb-1">Schema Markup</label>
+                        <textarea
+                            id="schema_markup"
+                            className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${errorsText.schema_markup ? 'border-red-500' : 'border-gray-300'}`}
+                            {...registerText('schema_markup', { required: 'Schema markup is required' })}
+                        />
+                        <FormError error={errorsText.schema_markup?.message} />
+                    </div>
+
                     <div className="mt-6">
                         <Button onClick={() => { }} disabled={loading}>
                             Create Page
                         </Button>
                     </div>
                 </form>
+
+
             </div>
         </div>
     )
