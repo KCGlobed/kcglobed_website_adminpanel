@@ -89,11 +89,7 @@ const DynamicPages: React.FC = () => {
           '-'
         )
     },
-    {
-      key: 'created_at' as keyof ExcellenceSection, title: 'Created At', align: 'center', render: (_, row) => {
-        return formatDate(row.created_at)
-      }
-    },
+    { key: 'order' as keyof ExcellenceSection, title: 'Order', align: 'left' },
     {
       key: 'actions' as keyof ExcellenceSection,
       title: 'Actions',
