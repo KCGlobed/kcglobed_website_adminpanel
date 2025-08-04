@@ -30,6 +30,10 @@ export const updatePage = async (payload: any): Promise<any> => {
     return await apiRequest(`landing-page/update-section-data/${payload.id}`, 'POST', payload.formData);
 };
 
+export const removeSubSec = async (id: any): Promise<any> => {
+    return await apiRequest(`landing-page/remove-sub-section-data/${id}`, 'DELETE');
+};
+
 export const updateSubSec = async (payload: any): Promise<any> => {
     return await apiRequest(`landing-page/update-sub-section-data/`, 'POST', payload.formData);
 };

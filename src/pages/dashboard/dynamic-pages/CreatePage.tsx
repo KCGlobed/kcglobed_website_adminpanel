@@ -51,7 +51,7 @@ const CreatePage: React.FC = () => {
     const [subSec, setSubSec] = useState<any>([]);
     const [subSectionData, setSubSectionData] = useState<any>([]);
 
-    const { data } = useAppSelector(state => state.pages)
+    const { data } :any = useAppSelector(state => state.pages)
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         const { name, value } = e.target;

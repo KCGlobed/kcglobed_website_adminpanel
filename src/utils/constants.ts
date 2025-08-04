@@ -9,7 +9,7 @@ const savedMode = localStorage.getItem('app_mode');
 if (savedMode === 'production') {
   BASE_URL = PROD_URL;
 } else {
-  BASE_URL = DEV_URL;
+  BASE_URL = PROD_URL;
 }
 
 export const changeMode = (isProd: boolean, reload: boolean = true): void => {

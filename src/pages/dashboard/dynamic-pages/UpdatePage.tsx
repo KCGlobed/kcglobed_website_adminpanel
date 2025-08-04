@@ -5,7 +5,7 @@ import { FaArrowLeft, FaSave, FaTrash, FaPlus } from 'react-icons/fa';
 import Button from '../../../components/TextEditor/ui/Button';
 import type { ExcellenceSection } from '../../../utils/types';
 import LoadingToast from '../../../components/LoadingToast/LoadingToast';
-import { updatePage, updateSubSec } from '../../../services/pages';
+import { removeSubSec, updatePage, updateSubSec } from '../../../services/pages';
 import { getAllPageNames } from '../../../store/slices/pagesSlice';
 
 interface SubSection {
@@ -121,7 +121,11 @@ const UpdatePage: React.FC = () => {
         }));
     };
 
-    const removeSubSection = (index: number) => {
+    const removeSubSection = async (index: number) => {
+        if(formData.sub_section[index]){
+            console.log(formData.sub_section[index])
+            await removeSubSec(formData.sub_section[index].id);
+        } 
         const updatedSubSections = formData.sub_section.filter((_, i) => i !== index);
         setFormData(prev => ({
             ...prev,
@@ -438,16 +442,9 @@ const UpdatePage: React.FC = () => {
 
                     {/* Sub Sections */}
                     <div className="mb-6">
-                        <div className="flex justify-between items-center mb-4">
+
+                         <div className="flex justify-between items-center mb-4">
                             <h3 className="text-lg font-medium">Sub Sections</h3>
-                            <Button
-                                type="button"
-                                onClick={addSubSection}
-                                className="flex items-center gap-2"
-                                variant="secondary"
-                            >
-                                <FaPlus /> Add Sub Section
-                            </Button>
                         </div>
 
                         {formData.sub_section.map((subSection, index) => (
@@ -527,16 +524,24 @@ const UpdatePage: React.FC = () => {
                                     </div>
                                 </div>
 
-                                <Button
+                                <button
                                     type="button"
                                     onClick={() => removeSubSection(index)}
-                                    variant="danger"
                                     className="flex items-center gap-2"
                                 >
                                     <FaTrash /> Remove Sub Section
-                                </Button>
+                                </button>
                             </div>
                         ))}
+
+                        <div className="flex justify-end items-center mb-4">
+                            <Button
+                                onClick={addSubSection}
+                                className="flex items-center gap-2"
+                            >
+                                <FaPlus /> Add Sub Section
+                            </Button>
+                        </div>
                     </div>
 
                     <div className="flex justify-end gap-4">

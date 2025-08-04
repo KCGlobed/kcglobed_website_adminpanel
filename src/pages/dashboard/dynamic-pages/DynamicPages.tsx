@@ -81,7 +81,7 @@ const DynamicPages: React.FC = () => {
             href={row.slider_video}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-blue-600 underline"
+            className="text-blue-600 underline" 
           >
             View Video
           </a>
