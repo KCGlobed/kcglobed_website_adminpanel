@@ -16,7 +16,8 @@ type BlogForm = {
   primaryKeyword: string;
   metaDescription: string;
   image: FileList;
-  canonicalurl: string
+  canonicalurl?: string
+  schema_markup?: string
 };
 
 const AddNewBlog: React.FC = () => {
@@ -48,7 +49,7 @@ const AddNewBlog: React.FC = () => {
       formData.append('image', data.image[0]);
       formData.append('created_by', data.title);
       formData.append('category_id', data.category);
-      formData.append('tags',tag);
+      formData.append('tags', tag);
       formData.append('live_date', data.date);
       formData.append('meta_title', data.metaTitle);
       formData.append('meta_description', data.metaDescription);
@@ -56,6 +57,7 @@ const AddNewBlog: React.FC = () => {
       formData.append('img_alt_tag', data.altTag);
       formData.append('slug', data.slug);
       formData.append('canonical_url', data.canonicalurl);
+      formData.append('schema_markup', data.schema_markup);
       await dispatch(addBlogs(formData))
       navigate("/dashboard/blog")
     } catch (error) {
@@ -207,6 +209,15 @@ const AddNewBlog: React.FC = () => {
               {...register('canonicalurl')}
               className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               placeholder="Main SEO keyword"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Schema Markup</label>
+            <textarea
+              rows={3}
+              {...register('schema_markup')}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              placeholder="Schema markup for structured data"
             />
           </div>
 

@@ -14,6 +14,7 @@ interface SubSection {
     description: string;
     image: any;
     existingImage?: string;
+    alt_text?: string
 }
 
 interface LocationState {
@@ -29,7 +30,7 @@ const UpdatePage: React.FC = () => {
     const [error, setError] = useState<string | null>(null);
     const dispatch = useAppDispatch()
     const [subSec, setSubSec] = useState<any>([]);
-    
+
     const [formData, setFormData] = useState({
         page_id: pageData.page_id,
         section_id: pageData.section_type_id,
@@ -42,10 +43,12 @@ const UpdatePage: React.FC = () => {
         existingSliderVideo: pageData.slider_video,
         existingImage: pageData.image,
         order: pageData.order,
-        sub_section: pageData.sub_section?.map(sub => ({
+        alt_text: pageData?.img_alt_tag || '',
+        sub_section: pageData.sub_section?.map((sub: any) => ({
             ...sub,
             image: null,
-            existingImage: sub.image
+            existingImage: sub.image,
+            alt_text: sub?.img_alt_tag || ''
         })) || [] as SubSection[],
     });
 
@@ -57,17 +60,17 @@ const UpdatePage: React.FC = () => {
         dispatch(getAllPageNames())
     }, [dispatch])
 
-    useEffect(()=>{
-        if(data.length){
-            const selectedSec:any = data.find((sec:any)=> sec.id == pageData.page_id);
+    useEffect(() => {
+        if (data.length) {
+            const selectedSec: any = data.find((sec: any) => sec.id == pageData.page_id);
             setSubSec(selectedSec ? selectedSec.section_list : []);
         }
     }, [data])
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
-        if(name=="page_id"){
-            const selectedSec:any = data.find((val:any)=>val.id==value);
+        if (name == "page_id") {
+            const selectedSec: any = data.find((val: any) => val.id == value);
             setSubSec(selectedSec.section_list);
         }
         setFormData(prev => ({ ...prev, [name]: value }));
@@ -122,10 +125,10 @@ const UpdatePage: React.FC = () => {
     };
 
     const removeSubSection = async (index: number) => {
-        if(formData.sub_section[index]){
+        if (formData.sub_section[index]) {
             console.log(formData.sub_section[index])
             await removeSubSec(formData.sub_section[index].id);
-        } 
+        }
         const updatedSubSections = formData.sub_section.filter((_, i) => i !== index);
         setFormData(prev => ({
             ...prev,
@@ -171,7 +174,7 @@ const UpdatePage: React.FC = () => {
             formDataToSend.append('text_3', formData.text_3);
             formDataToSend.append('order', formData.order);
             formDataToSend.append('description', formData.description);
-
+            formDataToSend.append('img_alt_tag', formData.alt_text);
             if (formData.slider_video) {
                 formDataToSend.append('slider_video', formData.slider_video);
             }
@@ -180,7 +183,7 @@ const UpdatePage: React.FC = () => {
                 formDataToSend.append('image', formData.image);
             }
 
-            formData.sub_section.forEach((item:any, index:number) => {
+            formData.sub_section.forEach((item: any, index: number) => {
                 subSecFormData.append(`section_data[${index}][title]`, item.title);
                 subSecFormData.append(`section_data[${index}][description]`, item.description);
                 subSecFormData.append(`section_data[${index}][main_id]`, pageData.id.toString());
@@ -190,6 +193,10 @@ const UpdatePage: React.FC = () => {
                 if (item.id) {
                     subSecFormData.append(`section_data[${index}][id]`, item.id.toString());
                 }
+                if (item.alt_text) {
+                    subSecFormData.append(`section_data[${index}][img_alt_tag]`, item.alt_text);
+                }
+
             });
 
             if (!param.id) {
@@ -197,7 +204,7 @@ const UpdatePage: React.FC = () => {
                 return;
             }
             await updatePage({ id: param.id, formData: formDataToSend });
-            await updateSubSec({formData : subSecFormData});
+            await updateSubSec({ formData: subSecFormData });
             history.back();
         } catch (err) {
             setError('Failed to update page. Please try again.');
@@ -242,7 +249,7 @@ const UpdatePage: React.FC = () => {
                                 className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
                                 required
                             >
-                                {data.map((option:any) => (
+                                {data.map((option: any) => (
                                     <option key={option.id} value={option.id}>
                                         {option.page_type}
                                     </option>
@@ -262,7 +269,7 @@ const UpdatePage: React.FC = () => {
                                 className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
                                 required
                             >
-                                {subSec.map((option:any) => (
+                                {subSec.map((option: any) => (
                                     <option key={option.id} value={option.id}>
                                         {option.section_type}
                                     </option>
@@ -438,12 +445,25 @@ const UpdatePage: React.FC = () => {
                                 </div>
                             )}
                         </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Image Alt Text
+                            </label>
+                            <input
+                                type="text"
+                                name="alt_text"
+                                value={formData.alt_text}
+                                onChange={handleChange}
+                                className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                            />
+                        </div>
+
                     </div>
 
                     {/* Sub Sections */}
                     <div className="mb-6">
 
-                         <div className="flex justify-between items-center mb-4">
+                        <div className="flex justify-between items-center mb-4">
                             <h3 className="text-lg font-medium">Sub Sections</h3>
                         </div>
 
@@ -522,6 +542,18 @@ const UpdatePage: React.FC = () => {
                                             </div>
                                         )}
                                     </div>
+                                </div>
+                                <div className='mb-4'>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                        Image Alt Text
+                                    </label>
+                                    <input
+                                        type="text"
+                                        name="alt_text"
+                                        value={subSection.alt_text}
+                                        onChange={(e) => handleSubSectionChange(e, index)}
+                                        className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                                    />
                                 </div>
 
                                 <button

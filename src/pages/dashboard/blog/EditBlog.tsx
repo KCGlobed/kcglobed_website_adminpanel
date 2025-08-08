@@ -20,6 +20,7 @@ type BlogForm = {
     metaDescription: string;
     image: FileList;
     canonicalurl: string
+    schema_markup?: string;
 };
 
 const AddNewBlog: React.FC = () => {
@@ -37,7 +38,7 @@ const AddNewBlog: React.FC = () => {
     const [tags, setTags] = useState<string[]>([]);
     const [contant, setContant] = useState<any>("")
     const [tagInput, setTagInput] = useState('');
-    const {showAlert } = useAlert();
+    const { showAlert } = useAlert();
     const navigate = useNavigate();
     const { id } = useParams();
 
@@ -52,7 +53,10 @@ const AddNewBlog: React.FC = () => {
             formData.append('title', data.title);
             formData.append('description', contant);
             if (data.image && data.image.length > 0) {
-              formData.append('image', data.image[0]);
+                formData.append('image', data.image[0]);
+            }
+            if (data?.schema_markup) {
+                formData.append('schema_markup', data.schema_markup);
             }
             formData.append('created_by', data.createdBy);
             formData.append('category_id', data.category);
@@ -114,7 +118,7 @@ const AddNewBlog: React.FC = () => {
             try {
                 const res = await viewBlog(Number(id));
                 const blog = res.data;
-                console.log(blog, "blog")
+                console.log(blog, "blog data")
                 reset({
                     title: blog.title,
                     createdBy: blog.created_by,
@@ -126,6 +130,7 @@ const AddNewBlog: React.FC = () => {
                     primaryKeyword: blog.meta_keys || '',
                     altTag: blog.img_alt_tag || '',
                     canonicalurl: blog.canonical_url || '',
+                    schema_markup: blog.schema_markup || '',
                 });
                 setTags(blog.tags || []);
                 setContant(blog.description);
@@ -253,7 +258,15 @@ const AddNewBlog: React.FC = () => {
                             placeholder="Main SEO keyword"
                         />
                     </div>
-
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Schema Markup</label>
+                        <textarea
+                            rows={3}
+                            {...register('schema_markup')}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            placeholder="Schema markup for structured data"
+                        />
+                    </div>
                     <div className="md:col-span-2">
                         <label className="block text-sm font-medium text-gray-700 mb-1">Tags</label>
                         <div className="flex flex-wrap gap-2 mb-2">

@@ -7,23 +7,30 @@ import type { Comment } from '../../../utils/types';
 import GlassButton from '../../../components/Button/Button';
 import { MdDelete } from "react-icons/md";
 import { formatDate } from '../../../utils';
+import ExportButtons from '../../../components/export/ExportButtons';
+import { getPartnerWithUsForExport } from '../../../store/slices/partnerwithusslice';
 
 
 const BlogCommentsManagement = () => {
     const { comments: data, loading } = useAppSelector(state => state.blog)
+    let exportData = []
     const [error, setError] = useState<string | null>(null);
     const [currentPage, setCurrentPage] = useState<number>(1);
     const [filter, setFilter] = useState<number | null>(null);
+    const [showExportModal, setShowExportModal] = useState(false);
+    const [exportType, setExportType] = useState<'csv' | 'pdf' | null>(null);
+    const [startDate, setStartDate] = useState('2025-07-01');
+    const [endDate, setEndDate] = useState('2025-07-03');
     const dispatch = useDispatch()
     useEffect(() => {
-        dispatch(getBlogComments())
+        dispatch(getBlogComments() as any)
     }, []);
 
 
     const updateCommentStatus = async (commentId: number, newStatus: number) => {
         try {
-            await dispatch(approveRejectBlogComment({ comment_id: commentId, status: newStatus }))
-            dispatch(getBlogComments())
+            await dispatch(approveRejectBlogComment({ comment_id: commentId, status: newStatus } as any) as any);
+            dispatch(getBlogComments() as any);
         } catch (err) {
             setError('Failed to update comment status');
             console.error(err);
@@ -32,8 +39,8 @@ const BlogCommentsManagement = () => {
 
     const deleteCommentAction = async (commentId: number) => {
         try {
-            await dispatch(deleteBlogComment(commentId))
-            dispatch(getBlogComments())
+            await dispatch(deleteBlogComment(commentId as any) as any)
+            dispatch(getBlogComments() as any)
         } catch (err) {
             setError('Failed to delete comment');
             console.error(err);
@@ -54,7 +61,7 @@ const BlogCommentsManagement = () => {
         }
     };
 
-   
+
     // Filter data based on selected status
     const filteredData = useMemo(() => {
         if (filter === null) {
@@ -116,17 +123,36 @@ const BlogCommentsManagement = () => {
         }
     ], []);
 
+    let exportUrl: string | null = null;
+    if (exportData && typeof exportData === 'object' && !Array.isArray(exportData) && 'data' in exportData) {
+        exportUrl = (exportData as any).data.csv_url || (exportData as any).data.pdf_url || null;
+    }
+    const handleExportClick = (type: 'csv' | 'pdf') => {
+        setExportType(type);
+        setShowExportModal(true);
+    };
 
+    const handleSendExport = async () => {
+        const payload = {
+            start_date: startDate,
+            end_date: endDate,
+        };
+        dispatch(getPartnerWithUsForExport({ type: exportType, payload }) as any)
+        setShowExportModal(false);
+        setExportType(null);
+    };
     if (error) {
         return <div className="text-red-500 p-4">{error}</div>;
     }
 
     return (
         <div className="container mx-auto px-4 py-8">
-            <div className="flex justify-between items-center">
-                <h1 className="text-2xl font-bold mb-6">Blog Comments Management</h1>
-
-                <div className="mb-6 flex space-x-4">
+            <div className="flex justify-between items-center mb-6">
+                <h1 className="text-2xl font-bold">Blog Comments Management</h1>
+                {
+                    data?.length > 0 && <ExportButtons exportUrl={exportUrl} startDate={startDate} endDate={endDate} setShowExportModal={setShowExportModal} setStartDate={setStartDate} setEndDate={setEndDate} showExportModal={showExportModal} handleExportClick={handleExportClick} handleSendExport={handleSendExport} exportType={exportType} />
+                }
+                <div className="flex space-x-4">
                     <button
                         onClick={() => {
                             setFilter(null);

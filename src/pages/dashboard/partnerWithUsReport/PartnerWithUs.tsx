@@ -56,7 +56,7 @@ const PartnerWitUs: React.FC = () => {
   }
 
   useEffect(() => {
-    dispatch(getPartnerWithUs())
+    dispatch(getPartnerWithUs() as any)
   }, [dispatch])
 
   const handleExportClick = (type: 'csv' | 'pdf') => {
@@ -69,7 +69,7 @@ const PartnerWitUs: React.FC = () => {
       start_date: startDate,
       end_date: endDate,
     };
-    dispatch(getPartnerWithUsForExport({ type: exportType, payload }))
+    dispatch(getPartnerWithUsForExport({ type: exportType, payload }) as any)
     setShowExportModal(false);
     setExportType(null);
   };

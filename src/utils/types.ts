@@ -232,7 +232,7 @@ export interface BookOrder {
 
 export interface ExcellenceSection {
   id: number;
-  page:number;
+  page: number;
   page_id: string;
   section_type_id: string;
   section_type: any;
@@ -246,6 +246,7 @@ export interface ExcellenceSection {
   created_at: string;
   sub_section: SubSection[];
   mentors: any[];
+  alt_text?: string,
 }
 
 export interface SubSection {

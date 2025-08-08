@@ -7,9 +7,9 @@ const PROD_URL = 'https://backend-prod-254015706580.asia-south2.run.app/api/';
 
 const savedMode = localStorage.getItem('app_mode');
 if (savedMode === 'production') {
-  BASE_URL = PROD_URL;
+  BASE_URL = DEV_URL;
 } else {
-  BASE_URL = PROD_URL;
+  BASE_URL = DEV_URL;
 }
 
 export const changeMode = (isProd: boolean, reload: boolean = true): void => {
@@ -25,18 +25,18 @@ export { BASE_URL };
 
 
 const PAGE_TYPES = [
-    { value: 'homepage', label: 'Home Page' },
-    { value: 'course_main', label: 'Main Course Page'},
-    { value: 'course_cpa', label: 'CPA Page'},
-    { value: 'course_cma', label: 'CMA Page'},
-    { value: 'course_ea', label: 'EA Page'}
+  { value: 'homepage', label: 'Home Page' },
+  { value: 'course_main', label: 'Main Course Page' },
+  { value: 'course_cpa', label: 'CPA Page' },
+  { value: 'course_cma', label: 'CMA Page' },
+  { value: 'course_ea', label: 'EA Page' }
 ];
 
 const SECTION_TYPES = [
-    { value: 'banner', label: 'Banner' },
-    { value: 'course_section', label: 'Course Section' },
-    { value: 'teee_section', label: 'Experience Educational Section' },
-    { value: 'demo3', label: 'Demo3' },
+  { value: 'banner', label: 'Banner' },
+  { value: 'course_section', label: 'Course Section' },
+  { value: 'teee_section', label: 'Experience Educational Section' },
+  { value: 'demo3', label: 'Demo3' },
 ];
 
 export { PAGE_TYPES, SECTION_TYPES }

@@ -10,6 +10,7 @@ interface SubSection {
     description: string | null;
     image: File | null;
     existingImage?: string;
+    alt_text?: string;
 }
 
 interface BannerFormData {
@@ -25,6 +26,7 @@ interface BannerFormData {
     existingSliderVideo?: string;
     existingImage?: string;
     sub_section: SubSection[];
+    alt_text?: string;
 }
 
 const CreatePage: React.FC = () => {
@@ -42,6 +44,7 @@ const CreatePage: React.FC = () => {
         slider_video: null,
         image: null,
         sub_section: [],
+        alt_text: '',
     });
 
     const sliderVideoRef = useRef<HTMLInputElement>(null);
@@ -51,12 +54,12 @@ const CreatePage: React.FC = () => {
     const [subSec, setSubSec] = useState<any>([]);
     const [subSectionData, setSubSectionData] = useState<any>([]);
 
-    const { data } :any = useAppSelector(state => state.pages)
+    const { data }: any = useAppSelector(state => state.pages)
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
-        if(name=="page_id"){
-            const selectedSec:any = data.find((val:any)=>val.id==value);
+        if (name == "page_id") {
+            const selectedSec: any = data.find((val: any) => val.id == value);
             setSubSec(selectedSec.section_list);
         }
         setFormData(prev => ({
@@ -91,11 +94,11 @@ const CreatePage: React.FC = () => {
 
     const handleSubSectionInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>, index: number) => {
         const { name, value } = e.target;
-        const updatedSubSections:any = [...formData.sub_section];
+        const updatedSubSections: any = [...formData.sub_section];
         updatedSubSections[index] = {
             ...updatedSubSections[index],
             [name]: value === '' ? null : value,
-            main_id : formData.section_id
+            main_id: formData.section_id
         };
         setSubSectionData(updatedSubSections);
         setFormData(prev => ({
@@ -112,7 +115,8 @@ const CreatePage: React.FC = () => {
                 {
                     title: '',
                     description: null,
-                    image: null
+                    image: null,
+                    alt_text: '',
                 }
             ]
         }));
@@ -176,8 +180,11 @@ const CreatePage: React.FC = () => {
             if (formData.image) {
                 formDataToSend.append('image', formData.image);
             }
+            if (formData.alt_text) {
+                formDataToSend.append('img_alt_tag', formData.alt_text);
+            }
 
-            subSectionData.forEach((item:any, index:number) => {
+            subSectionData.forEach((item: any, index: number) => {
                 subSecFormData.append(`item[${index}][title]`, item.title);
                 subSecFormData.append(`item[${index}][description]`, item.description);
                 if (item.image) {
@@ -186,10 +193,12 @@ const CreatePage: React.FC = () => {
                 if (item.id) {
                     subSecFormData.append(`item[${index}][id]`, item.id.toString());
                 }
+                if (item.alt_text) {
+                    subSecFormData.append(`item[${index}][img_alt_tag]`, item.alt_text);
+                }
             });
-            
             await createPage(formDataToSend);
-            await updateSubSec({formData : subSecFormData});
+            await updateSubSec({ formData: subSecFormData });
             history.back();
         } catch (err) {
             setError('Failed to submit form. Please try again.');
@@ -197,12 +206,12 @@ const CreatePage: React.FC = () => {
         }
     };
 
-    useEffect(()=>{
+    useEffect(() => {
         dispatch(getAllPageNames());
     }, [])
 
-    useEffect(()=>{
-        if(data[0]?.section_list){
+    useEffect(() => {
+        if (data[0]?.section_list) {
             setSubSec(data[0]?.section_list);
         }
     }, [data])
@@ -258,7 +267,7 @@ const CreatePage: React.FC = () => {
                                 className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
                                 required
                             >
-                                {subSec.map((option:any) => (
+                                {subSec.map((option: any) => (
                                     <option key={option.id} value={option.id}>
                                         {option.section_type}
                                     </option>
@@ -392,6 +401,19 @@ const CreatePage: React.FC = () => {
                                 </div>
                             )}
                         </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Image Alt Text
+                            </label>
+                            <input
+                                type="text"
+                                name="alt_text"
+                                value={formData.alt_text || ''}
+                                onChange={handleInputChange}
+                                className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                            />
+                        </div>
+
                     </div>
 
                     {/* Sub Sections */}
@@ -463,6 +485,19 @@ const CreatePage: React.FC = () => {
                                             </div>
                                         )}
                                     </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                                            Image Alt Text
+                                        </label>
+                                        <input
+                                            type="text"
+                                            name="alt_text"
+                                            value={subSection.alt_text || ''}
+                                            onChange={(e) => handleSubSectionInputChange(e, index)}
+                                            className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                                        />
+                                    </div>
+
                                 </div>
 
                                 <button
