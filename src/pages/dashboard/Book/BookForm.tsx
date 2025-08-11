@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from "react";
 import LexicalEditor from "../../../components/TextEditor";
 import { useAppDispatch, useAppSelector } from "../../../hooks/useRedux";
-import { uploadNewBook } from "../../../store/slices/bookSlice";
+import { getAllAuthors, uploadNewBook } from "../../../store/slices/bookSlice";
 import Button from "../../../components/TextEditor/ui/Button";
 import { FaArrowLeft } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import { useAlert } from "../../../context/AlertContext";
+import { addBookImage, assignAuthorToBook } from "../../../services/book";
 
 interface Book {
     id?: number;
@@ -23,7 +24,7 @@ interface Book {
     discount_type: string | null;
     publisher: string;
     isbn: string | null;
-    gst_amount: number;
+    gst_percentage: number;
     total_price: number;
     usa_original_price: number;
     usa_discount_percentage: number;
@@ -40,7 +41,11 @@ interface BookFormProps {
 }
 
 const BookForm: React.FC<BookFormProps> = () => {
-    const { loading } = useAppSelector(state => state.books)
+    const { loading, authors } = useAppSelector(state => state.books)
+    const [highImages, setHighImages] = useState<{ file: File; url: string }[]>([]);
+    const [mediumImages, setMediumImages] = useState<{ file: File; url: string }[]>([]);
+    const [lowImages, setLowImages] = useState<{ file: File; url: string }[]>([]);
+    const [assignAuthor, setAssignAuthor] = useState()
     const { showAlert } = useAlert()
     const navigate = useNavigate()
     const [formData, setFormData] = useState<Book & { is_bundle: boolean }>({
@@ -48,22 +53,22 @@ const BookForm: React.FC<BookFormProps> = () => {
         course_name: "",
         subject_name: "",
         short_description: "",
-        no_of_pages: 0,
+        no_of_pages: undefined,
         language: "English",
         // book_file: null,
         perview_image: "",
-        original_price: 0,
-        discount_percentage: 0,
+        original_price: undefined,
+        discount_percentage: undefined,
         discount_type: null,
         publisher: "",
         isbn: null,
-        gst_amount: 0,
-        total_price: 0,
-        usa_original_price: 0,
-        usa_discount_percentage: 0,
-        usa_total_price: 0,
+        gst_percentage: undefined,
+        total_price: undefined,
+        usa_original_price: undefined,
+        usa_discount_percentage: undefined,
+        usa_total_price: undefined,
         visible: 1,
-        out_of_stock: 0,
+        out_of_stock: undefined,
         description: "",
         is_bundle: false,
     });
@@ -76,14 +81,36 @@ const BookForm: React.FC<BookFormProps> = () => {
         };
     }, [previewImage]);
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const handleChange = (
+        e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+    ) => {
         const { name, value, type } = e.target;
-        const parsedValue = type === "number" ? Number(value) : value;
-        setFormData(prev => ({
-            ...prev,
-            [name]: parsedValue,
-        }));
+        const parsedValue = type === "number"
+            ? value === "" ? "" : Number(value)
+            : value;
+
+
+        setFormData(prev => {
+            let updated = { ...prev, [name]: parsedValue };
+
+            // Auto-calculate India selling price
+            if (name === "original_price" || name === "discount_percentage") {
+                const discount = updated.discount_percentage || 0;
+                const original = updated.original_price || 0;
+                updated.total_price = Number((original - (original * discount) / 100).toFixed(2));
+            }
+
+            // Auto-calculate USA selling price
+            if (name === "usa_original_price" || name === "usa_discount_percentage") {
+                const discountUSA = updated.usa_discount_percentage || 0;
+                const originalUSA = updated.usa_original_price || 0;
+                updated.usa_total_price = Number((originalUSA - (originalUSA * discountUSA) / 100).toFixed(2));
+            }
+
+            return updated;
+        });
     };
+
 
     const handlePreviewImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -120,16 +147,76 @@ const BookForm: React.FC<BookFormProps> = () => {
         if (previewImage) {
             data.append("perview_image", previewImage.file);
         }
+
         try {
-            await dispatch(uploadNewBook(data)).unwrap();
-            console.log(formData, 'this ')
-            showAlert("Book added successfully", 'success')
-            navigate("/dashboard/books")
+            const res: any = await dispatch(uploadNewBook(data)).unwrap();
+            // assign the author to the book
+
+            if (assignAuthor) {
+                await assignAuthorToBook({ book_id: res.data.book_id, author_id: assignAuthor });
+            }
+            // // prepare second API payload
+            const formData = new FormData();
+            formData.append("book_id", res.data.book_id);
+
+            if (highImages?.length) {
+                highImages.forEach((file: any, index: number) => {
+                    formData.append(`high[${index}]`, file.file);
+                });
+            }
+
+            if (mediumImages?.length) {
+                mediumImages.forEach((file: any, index: number) => {
+                    formData.append(`medium[${index}]`, file.file);
+                });
+            }
+
+            if (lowImages?.length) {
+                lowImages.forEach((file: any, index: number) => {
+                    formData.append(`low[${index}]`, file.file);
+                });
+            }
+            await addBookImage(formData);
+            showAlert("Book added successfully", "success");
+            navigate("/dashboard/books");
         } catch (err) {
-            // console.error("Error creating book or uploading images", err);
+            console.error("Error creating book or uploading images", err);
         }
     };
 
+    const handleImageChange = (
+        e: React.ChangeEvent<HTMLInputElement>,
+        type: "high" | "medium" | "low"
+    ) => {
+        const files = e.target.files ? Array.from(e.target.files) : [];
+        const newImages = files.map(file => ({
+            file,
+            url: URL.createObjectURL(file)
+        }));
+
+        if (type === "high") setHighImages(prev => [...prev, ...newImages]);
+        if (type === "medium") setMediumImages(prev => [...prev, ...newImages]);
+        if (type === "low") setLowImages(prev => [...prev, ...newImages]);
+    };
+
+    const handleRemoveImage = (type: "high" | "medium" | "low", index: number) => {
+        if (type === "high") {
+            URL.revokeObjectURL(highImages[index].url);
+            setHighImages(prev => prev.filter((_, i) => i !== index));
+        }
+        if (type === "medium") {
+            URL.revokeObjectURL(mediumImages[index].url);
+            setMediumImages(prev => prev.filter((_, i) => i !== index));
+        }
+        if (type === "low") {
+            URL.revokeObjectURL(lowImages[index].url);
+            setLowImages(prev => prev.filter((_, i) => i !== index));
+        }
+    };
+
+    useEffect(() => {
+        dispatch(getAllAuthors() as any)
+    }, [])
 
     return (
         <div className="max-w-8xl mx-auto p-6 bg-white rounded-lg shadow-sm border border-gray-100">
@@ -164,64 +251,32 @@ const BookForm: React.FC<BookFormProps> = () => {
                         </div>
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">Author Name</label>
-                            <input
-                                name="author_name"
-                                value={formData.name}
-                                onChange={handleChange}
-                                placeholder="Author Name"
-                                required
-                                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Course Name</label>
-                            <input
-                                name="course_name"
-                                value={formData.course_name}
-                                onChange={handleChange}
-                                placeholder="Course Name"
-                                required
-                                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            />
-                        </div>
-
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Subject Name</label>
-                            <input
-                                name="subject_name"
-                                value={formData.subject_name}
-                                onChange={handleChange}
-                                placeholder="Subject Name"
-                                required
-                                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            />
-                        </div>
-
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">No. of Pages</label>
-                            <input
-                                name="no_of_pages"
-                                type="number"
-                                value={formData.no_of_pages}
-                                onChange={handleChange}
-                                placeholder="e.g. 120"
-                                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            />
-                        </div>
-
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Language</label>
                             <select
-                                name="language"
-                                value={formData.language}
+                                value={assignAuthor || ""}
+                                onChange={(e) => setAssignAuthor(e.target.value as any)}
+                                required
+                                className="w-full px-4 py-2 border border-gray-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            >
+                                <option value="">Select Author</option>
+                                {Array.isArray(authors) && authors?.map((author: any) => (
+                                    <option key={author.id || author.uuid || author.name} value={author.id}>
+                                        {author.name}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Stock Status</label>
+                            <select
+                                name="out_of_stock"
+                                value={formData.out_of_stock}
                                 onChange={handleChange}
                                 className="w-full px-4 py-2 border border-gray-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                             >
-                                <option value="English">English</option>
-                                <option value="Hindi">Hindi</option>
+                                <option value={0}>In Stock</option>
+                                <option value={1}>Out of Stock</option>
                             </select>
                         </div>
-
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">Preview Image</label>
                             <div className="space-y-2">
@@ -249,6 +304,109 @@ const BookForm: React.FC<BookFormProps> = () => {
                                     </div>
                                 )}
                             </div>
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                High Quality Images
+                            </label>
+                            <input
+                                type="file"
+                                accept=".jpg,.jpeg,.png"
+                                multiple
+                                onChange={(e) => handleImageChange(e, "high")}
+                                className="w-full px-4 py-2 border border-gray-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            />
+
+                            {highImages.length > 0 && (
+                                <div className="flex gap-3 mt-3 flex-wrap">
+                                    {highImages.map((img, index) => (
+                                        <div key={index} className="relative w-32 h-32 border rounded overflow-hidden">
+                                            <img src={img.url} alt={`High ${index + 1}`} className="object-cover w-full h-full" />
+                                            <button
+                                                type="button"
+                                                onClick={() => handleRemoveImage("high", index)}
+                                                className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center opacity-80 hover:opacity-100"
+                                            >
+                                                &times;
+                                            </button>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Medium Quality Images
+                            </label>
+                            <input
+                                type="file"
+                                accept=".jpg,.jpeg,.png"
+                                multiple
+                                onChange={(e) => handleImageChange(e, "medium")}
+                                className="w-full px-4 py-2 border border-gray-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            />
+
+                            {mediumImages.length > 0 && (
+                                <div className="flex gap-3 mt-3 flex-wrap">
+                                    {mediumImages.map((img, index) => (
+                                        <div key={index} className="relative w-32 h-32 border rounded overflow-hidden">
+                                            <img src={img.url} alt={`Medium ${index + 1}`} className="object-cover w-full h-full" />
+                                            <button
+                                                type="button"
+                                                onClick={() => handleRemoveImage("medium", index)}
+                                                className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center opacity-80 hover:opacity-100"
+                                            >
+                                                &times;
+                                            </button>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Low Quality Images
+                            </label>
+                            <input
+                                type="file"
+                                accept=".jpg,.jpeg,.png"
+                                multiple
+                                onChange={(e) => handleImageChange(e, "low")}
+                                className="w-full px-4 py-2 border border-gray-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            />
+
+                            {lowImages.length > 0 && (
+                                <div className="flex gap-3 mt-3 flex-wrap">
+                                    {lowImages.map((img, index) => (
+                                        <div key={index} className="relative w-32 h-32 border rounded overflow-hidden">
+                                            <img src={img.url} alt={`Low ${index + 1}`} className="object-cover w-full h-full" />
+                                            <button
+                                                type="button"
+                                                onClick={() => handleRemoveImage("low", index)}
+                                                className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center opacity-80 hover:opacity-100"
+                                            >
+                                                &times;
+                                            </button>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                    {/* Full Description */}
+                    <div className="space-y-2 w-full">
+                        <label className="block text-sm font-medium text-gray-700">
+                            Full Description
+                        </label>
+                        <div className="border border-gray-300 rounded-md p-2 w-full bg-white">
+                            <LexicalEditor
+                                type="description"
+                                value={formData.description}
+                                onChange={(value) =>
+                                    setFormData({ ...formData, description: value })
+                                }
+                                placeholder="Write a detailed description..."
+                            />
                         </div>
                     </div>
                 </div>
@@ -282,18 +440,19 @@ const BookForm: React.FC<BookFormProps> = () => {
                         </div>
 
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Total Price</label>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Selling Price</label>
                             <input
                                 name="total_price"
                                 type="number"
                                 value={formData.total_price}
                                 onChange={handleChange}
                                 placeholder="₹"
+                                readOnly
                                 className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                             />
                         </div>
 
-                        <div>
+                        {/* <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">Discount Type</label>
                             <input
                                 name="discount_type"
@@ -302,7 +461,7 @@ const BookForm: React.FC<BookFormProps> = () => {
                                 placeholder="e.g. Flat or %"
                                 className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                             />
-                        </div>
+                        </div> */}
                     </div>
                 </div>
 
@@ -335,12 +494,13 @@ const BookForm: React.FC<BookFormProps> = () => {
                         </div>
 
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">USA Total Price</label>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">USA Selling Price</label>
                             <input
                                 name="usa_total_price"
                                 type="number"
                                 value={formData.usa_total_price}
                                 onChange={handleChange}
+                                readOnly
                                 placeholder="$"
                                 className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                             />
@@ -350,14 +510,14 @@ const BookForm: React.FC<BookFormProps> = () => {
 
                 {/* Section 4: Additional Info */}
                 <div className="p-6 bg-gray-50 rounded-lg shadow-md space-y-4">
-                    <h2 className="text-lg font-semibold text-gray-700">Additional Information</h2>
+                    <h2 className="text-lg font-semibold text-gray-700">Product Information</h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">GST Amount</label>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">GST Amount(%)</label>
                             <input
-                                name="gst_amount"
+                                name="gst_percentage"
                                 type="number"
-                                value={formData.gst_amount}
+                                value={formData.gst_percentage}
                                 onChange={handleChange}
                                 placeholder="₹"
                                 className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -385,7 +545,29 @@ const BookForm: React.FC<BookFormProps> = () => {
                                 className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                             />
                         </div>
-
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Language</label>
+                            <select
+                                name="language"
+                                value={formData.language}
+                                onChange={handleChange}
+                                className="w-full px-4 py-2 border border-gray-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            >
+                                <option value="English">English</option>
+                                <option value="Hindi">Hindi</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">No. of Pages</label>
+                            <input
+                                name="no_of_pages"
+                                type="number"
+                                value={formData.no_of_pages}
+                                onChange={handleChange}
+                                placeholder="e.g. 120"
+                                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            />
+                        </div>
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">Visibility</label>
                             <select
@@ -396,19 +578,6 @@ const BookForm: React.FC<BookFormProps> = () => {
                             >
                                 <option value={1}>Visible</option>
                                 <option value={0}>Hidden</option>
-                            </select>
-                        </div>
-
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Stock Status</label>
-                            <select
-                                name="out_of_stock"
-                                value={formData.out_of_stock}
-                                onChange={handleChange}
-                                className="w-full px-4 py-2 border border-gray-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            >
-                                <option value={0}>In Stock</option>
-                                <option value={1}>Out of Stock</option>
                             </select>
                         </div>
                         {/* isBundle Toggle */}
@@ -427,10 +596,32 @@ const BookForm: React.FC<BookFormProps> = () => {
                         </div>
                     </div>
                 </div>
-                {/* Section 5: Descriptions */}
+                {/* Section 5: Additional Info */}
                 <div className="p-6 bg-gray-50 rounded-lg shadow-md space-y-6">
-                    <h2 className="text-lg font-semibold text-gray-700">Descriptions</h2>
+                    <h2 className="text-lg font-semibold text-gray-700">Additional Information (Optional)</h2>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Course Name</label>
+                            <input
+                                name="course_name"
+                                value={formData.course_name}
+                                onChange={handleChange}
+                                placeholder="Course Name"
+                                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            />
+                        </div>
 
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Subject Name</label>
+                            <input
+                                name="subject_name"
+                                value={formData.subject_name}
+                                onChange={handleChange}
+                                placeholder="Subject Name"
+                                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            />
+                        </div>
+                    </div>
                     {/* Short Description */}
                     <div className="space-y-2">
                         <label className="block text-sm font-medium text-gray-700">
@@ -444,23 +635,6 @@ const BookForm: React.FC<BookFormProps> = () => {
                                     setFormData({ ...formData, short_description: value })
                                 }
                                 placeholder="Write a brief description..."
-                            />
-                        </div>
-                    </div>
-
-                    {/* Full Description */}
-                    <div className="space-y-2">
-                        <label className="block text-sm font-medium text-gray-700">
-                            Full Description
-                        </label>
-                        <div className="border border-gray-300 rounded-md p-2 bg-white">
-                            <LexicalEditor
-                                type="description"
-                                value={formData.description}
-                                onChange={(value) =>
-                                    setFormData({ ...formData, description: value })
-                                }
-                                placeholder="Write a detailed description..."
                             />
                         </div>
                     </div>

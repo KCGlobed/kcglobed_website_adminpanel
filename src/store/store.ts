@@ -16,6 +16,7 @@ import pagesReducer from './slices/pagesSlice'
 import bookReducer from './slices/bookSlice'
 import testimonialReducer from './slices/testimonialSlice'
 import courseReducer from './slices/courseSlice'
+import salesReducer from './slices/salesSlice'
 export const store = configureStore({
   reducer: {
     auth: authReducer,
@@ -34,6 +35,7 @@ export const store = configureStore({
     pages: pagesReducer,
     books: bookReducer,
     testimonial: testimonialReducer,
+    sales: salesReducer,
   },
 });
 

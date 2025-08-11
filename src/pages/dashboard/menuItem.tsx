@@ -14,8 +14,8 @@ export const menuItems = [
     icon: <FaUsers className="mr-2" />,
     submenu: [
       { name: 'Books', path: '/dashboard/books' },
-      { name: 'Book in bundle', path: '/dashboard/book-bundle' }
-
+      { name: 'Book in bundle', path: '/dashboard/book-bundle' },
+      { name: 'Authors', path: '/dashboard/authors' },
     ]
   },
   {
@@ -65,5 +65,14 @@ export const menuItems = [
     name: 'Testimonial',
     icon: <FaBook className="mr-2" />,
     path: "/dashboard/testimonial"
+  },
+  {
+    name: 'Sales',
+    icon: <FaBook className="mr-2" />,
+    path: "/dashboard/sales",
+    submenu: [
+      { name: 'Active Subscription', path: '/dashboard/active-sales' },
+      { name: 'Incomplete Subscription', path: '/dashboard/incomplete-sales' },
+    ],
   },
 ];

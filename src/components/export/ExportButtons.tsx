@@ -22,7 +22,7 @@ function ExportButtons({ handleExportClick, showExportModal, startDate, endDate,
                     className="px-4 cursor-pointer py-2 bg-[#9810FA] text-white rounded hover:bg-blue-700 transition"
                     onClick={() => handleExportClick('csv')}
                 >
-                    Export CSV
+                    Export Excel
                 </button>
                 <button
                     className="px-4 cursor-pointer py-2 bg-[#9810FA] text-white rounded hover:bg-blue-700 transition"

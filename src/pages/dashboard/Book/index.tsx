@@ -13,7 +13,7 @@ import { useModal } from '../../../context/ModalContext';
 
 const Book: React.FC = () => {
     const [currentPage, setCurrentPage] = useState(1)
-    const { data, loading, bundledata } = useAppSelector((state) => state.books);
+    const { data, loading } = useAppSelector((state) => state.books);
     const { showAlert } = useAlert()
     const { showModal } = useModal()
     const dispatch = useDispatch()

@@ -34,6 +34,10 @@ import CreatePageName from "../pages/dashboard/dynamic-pages/CreatePageName";
 import Course from "../pages/dashboard/courses/Course";
 import UpdateCourse from "../pages/dashboard/courses/UpdateCourse";
 import CreateCourse from "../pages/dashboard/courses/CreateCourse";
+import Authors from "../pages/dashboard/Book/Authors";
+import AuthorForm from "../pages/dashboard/Book/AuthorForm";
+import Sales from "../pages/dashboard/sales/Sale";
+import InCompleteSale from "../pages/dashboard/sales/InCompleteSale";
 
 export default function AppRoutes() {
   return (
@@ -66,6 +70,8 @@ export default function AppRoutes() {
           <Route path="dynamic-page/edit/:id" element={<UpdatePage />} />
           <Route path="books" element={<Book />} />
           <Route path="new-book" element={<BookForm />} />
+          <Route path="authors" element={<Authors />} />
+          <Route path="new-author" element={<AuthorForm />} />
           <Route path="update-book/:id" element={<UpdateBookForm />} />
           <Route path="update-images/:id" element={<UpdateBookForm />} />
           <Route path="book-images/:id" element={<BookImageManager />} />
@@ -74,6 +80,8 @@ export default function AppRoutes() {
           <Route path="new-course" element={<CreateCourse />} />
           <Route path="update-course/:id" element={<UpdateCourse />} />
           <Route path="testimonial" element={<Testimonial />} />
+          <Route path="active-sales" element={<Sales />} />
+          <Route path="incomplete-sales" element={<InCompleteSale />} />
           <Route path="testimonial/add" element={<AddTestimonial />} />
           <Route path="testimonial/update/:id" element={<UpdateTestimonial />} />
         </Route>

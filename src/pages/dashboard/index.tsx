@@ -23,7 +23,7 @@ const Dashboard: React.FC = () => {
     setOpenSubmenu(openSubmenu === menu ? null : menu);
   };
 
-  useEffect(()=>{
+  useEffect(() => {
     console.log("menuItems", menuItems);
   }, [menuItems])
 
@@ -46,7 +46,7 @@ const Dashboard: React.FC = () => {
               {isSidebarCollapsed ? <FaChevronRight /> : <FaChevronLeft />}
             </button>
           </div>
-          <nav className="flex flex-col space-y-1">
+          <nav className="flex h-[65vh] overflow-y-auto flex-col space-y-1">
             {menuItems?.map((item) => (
               <div key={item.name} className="relative group">
                 {item && item.submenu && item.submenu ? (

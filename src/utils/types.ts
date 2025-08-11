@@ -180,6 +180,21 @@ export interface PartnerWithUs {
   status: number;
 }
 
+export interface Subscription {
+  id: number;
+  first_name: string;
+  last_name: string;
+  email: string;
+  mobile: string;
+  order_date: string; // ISO date string
+  end_date: string;   // ISO date string
+  payment_method: string;
+  subscription_type: string; // 'yearly' | 'monthly' etc.
+  plan_info: {
+    id: number;
+    plan_name: string;
+  };
+};
 
 
 export interface PlacementSupportProps {
@@ -287,6 +302,14 @@ export interface BookProps {
   publisher: string;
   actions?: any
   is_bundle?: boolean
+}
+
+export interface AuthorProps {
+  id?: string
+  name: string;
+  description: string;
+  image: string;
+  actions?: any
 }
 export interface TestimonialProps {
   name: string

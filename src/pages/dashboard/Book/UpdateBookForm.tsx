@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import LexicalEditor from "../../../components/TextEditor";
-import { useAppDispatch, useAppSelector } from "../../../hooks/useRedux";
+import { useAppDispatch } from "../../../hooks/useRedux";
 import { getBookImage, updateExistingBook } from "../../../store/slices/bookSlice";
 import Button from "../../../components/TextEditor/ui/Button";
 import { FaArrowLeft } from "react-icons/fa";

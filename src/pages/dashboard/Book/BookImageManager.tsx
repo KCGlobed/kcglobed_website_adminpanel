@@ -12,25 +12,32 @@ const BookImageManager: React.FC = () => {
     const [loading, setLoading] = useState(false);
     const [deletingId, setDeletingId] = useState<string | null>(null);
     const [files, setFiles] = useState<{
-        low: File | null;
-        medium: File | null;
-        high: File | null;
-    }>({ low: null, medium: null, high: null });
+        low: File[];
+        medium: File[];
+        high: File[];
+    }>({ low: [], medium: [], high: [] });
 
-    useEffect(() => {
-        if (bookId) {
-            dispatch(getBookImage(bookId as any));
-        }
-    }, [bookId, dispatch]);
-
-    const handleFileChange = (quality: "low" | "medium" | "high", file: File | null) => {
-        setFiles(prev => ({ ...prev, [quality]: file }));
+    const handleFileChange = (quality: "low" | "medium" | "high", newFiles: FileList | null) => {
+        if (!newFiles) return;
+        setFiles(prev => ({
+            ...prev,
+            [quality]: [...prev[quality], ...Array.from(newFiles)]
+        }));
     };
+
+    const removeFile = (quality: "low" | "medium" | "high", index: number) => {
+        setFiles(prev => {
+            const updatedQualityFiles = [...prev[quality]].filter((_, i) => i !== index);
+            return { ...prev, [quality]: updatedQualityFiles };
+        });
+    };
+
 
     const handleUpload = async () => {
         if (!bookId) return;
-        if (!files.low || !files.medium || !files.high) {
-            alert("Please select all three image files (low, medium, high quality)");
+
+        if (!files.low.length || !files.medium.length || !files.high.length) {
+            alert("Please select images for all three qualities (low, medium, high)");
             return;
         }
 
@@ -38,21 +45,69 @@ const BookImageManager: React.FC = () => {
         try {
             const formData = new FormData();
             formData.append("book_id", bookId);
-            formData.append("low", files.low);
-            formData.append("medium", files.medium);
-            formData.append("high", files.high);
 
+            // Append multiple images for each quality
+            files.high.forEach((file, index) => {
+                formData.append(`high[${index}]`, file);
+            });
+
+            // Medium images with index
+            files.medium.forEach((file, index) => {
+                formData.append(`medium[${index}]`, file);
+            });
+
+            // Low images with index
+            files.low.forEach((file, index) => {
+                formData.append(`low[${index}]`, file);
+            });
+
+            console.log(files.low, files.medium, files.high);
             await dispatch(uploadBookImage(formData));
             await dispatch(getBookImage(bookId as any));
-
-            // Reset files after successful upload
-            setFiles({ low: null, medium: null, high: null });
+            setFiles({ low: [], medium: [], high: [] }); // Reset
         } catch (error) {
             console.error("Error uploading images:", error);
         } finally {
             setLoading(false);
         }
     };
+
+    useEffect(() => {
+        if (bookId) {
+            dispatch(getBookImage(bookId as any));
+        }
+    }, [bookId, dispatch]);
+
+    // const handleFileChange = (quality: "low" | "medium" | "high", file: File | null) => {
+    //     setFiles(prev => ({ ...prev, [quality]: file }));
+    // };
+
+    // const handleUpload = async () => {
+    //     if (!bookId) return;
+    //     if (!files.low || !files.medium || !files.high) {
+    //         alert("Please select all three image files (low, medium, high quality)");
+    //         return;
+    //     }
+
+    //     setLoading(true);
+    //     try {
+    //         const formData = new FormData();
+    //         formData.append("book_id", bookId);
+    //         formData.append("low", files.low);
+    //         formData.append("medium", files.medium);
+    //         formData.append("high", files.high);
+
+    //         await dispatch(uploadBookImage(formData));
+    //         await dispatch(getBookImage(bookId as any));
+
+    //         // Reset files after successful upload
+    //         setFiles({ low: null, medium: null, high: null });
+    //     } catch (error) {
+    //         console.error("Error uploading images:", error);
+    //     } finally {
+    //         setLoading(false);
+    //     }
+    // };
 
     const handleDelete = async (id: string) => {
         setDeletingId(id);
@@ -96,23 +151,43 @@ const BookImageManager: React.FC = () => {
                                     accept=".svg,.jpg,.jpeg,.png,.webp"
                                     id={`upload-${quality}`}
                                     className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                                    onChange={(e) => handleFileChange(quality, e.target.files?.[0] || null)}
+                                    onChange={(e) => handleFileChange(quality, e.target.files)}
+                                    multiple
                                     disabled={loading}
                                 />
                                 <label
                                     htmlFor={`upload-${quality}`}
-                                    className={`block w-full py-3 px-4 border-2 border-dashed rounded-lg text-center cursor-pointer transition-colors ${files[quality]
+                                    className={`block w-full py-3 px-4 border-2 border-dashed rounded-lg text-center cursor-pointer transition-colors ${files[quality].length
                                         ? "border-green-500 bg-green-50"
                                         : "border-gray-300 hover:border-blue-400 hover:bg-blue-50"
                                         }`}
                                 >
-                                    {files[quality] ? (
-                                        <span className="text-green-700 font-medium">{files[quality].name}</span>
+                                    {files[quality].length ? (
+                                        <div className="space-y-1">
+                                            {files[quality].map((file, index) => (
+                                                <div key={index} className="flex justify-between items-center text-green-700 font-medium bg-green-100 px-2 py-1 rounded">
+                                                    <span className="truncate max-w-[120px]">{file.name}</span>
+                                                    <button
+                                                        type="button"
+                                                        onClick={(e) => {
+                                                            e.preventDefault();      // Stops label's file input behavior
+                                                            e.stopPropagation();     // Stops click from bubbling up
+                                                            removeFile(quality, index);
+                                                        }}
+                                                        className="text-red-500 hover:text-red-700"
+                                                    >
+                                                        ✕
+                                                    </button>
+                                                </div>
+                                            ))}
+
+                                        </div>
                                     ) : (
-                                        <span className="text-gray-500">Select {quality} quality image</span>
+                                        <span className="text-gray-500">Select {quality} quality images</span>
                                     )}
                                 </label>
                             </div>
+
                         </div>
                     ))}
                 </div>

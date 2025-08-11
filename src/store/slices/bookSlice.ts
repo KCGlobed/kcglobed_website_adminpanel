@@ -1,6 +1,6 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import type { BookProps } from "../../utils/types";
-import { addBookImage, addBookInBundle, createNewBook, deleteTheBook, deleteTheImage, fetchAllBooks, getBookImages, getBundleDetail, updateBook } from "../../services/book";
+import { addBookImage, addBookInBundle, createNewBook, deleteTheBook, deleteTheImage, fetchAllAuthors, fetchAllBooks, getBookImages, getBundleDetail, updateBook } from "../../services/book";
 
 
 
@@ -13,6 +13,7 @@ export interface BookState {
     next: string | null;
     bundledata: null,
     bookImages?: [{ low?: string; medium?: string; high?: string }];
+    authors?: any[];
 }
 
 const initialState: BookState = {
@@ -24,6 +25,7 @@ const initialState: BookState = {
     previous: null,
     next: null,
     bookImages: undefined,
+    authors: []
 };
 
 export const getAllBooks = createAsyncThunk<BookProps, void, { rejectValue: string }>(
@@ -31,6 +33,18 @@ export const getAllBooks = createAsyncThunk<BookProps, void, { rejectValue: stri
     async (_, { rejectWithValue }) => {
         try {
             const data = await fetchAllBooks();
+            return data;
+
+        } catch (error: any) {
+            return rejectWithValue(error.message || "Failed to fetch blogs");
+        }
+    }
+);
+export const getAllAuthors = createAsyncThunk<BookProps, void, { rejectValue: string }>(
+    "author/get",
+    async (_, { rejectWithValue }) => {
+        try {
+            const data = await fetchAllAuthors();
             return data;
 
         } catch (error: any) {
@@ -156,11 +170,23 @@ const BookSlice = createSlice({
                 state.loading = false;
                 state.error = action.payload || "Unknown error";
             })
+            .addCase(getAllAuthors.pending, (state) => {
+                state.loading = true;
+                state.error = null;
+            })
+            .addCase(getAllAuthors.fulfilled, (state, action) => {
+                state.loading = false;
+                state.authors = (action.payload as any).results ?? action.payload;
+            })
+            .addCase(getAllAuthors.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.payload || "Unknown error";
+            })
             .addCase(uploadNewBook.pending, (state) => {
                 state.loading = true;
                 state.error = null;
             })
-            .addCase(uploadNewBook.fulfilled, (state, action) => {
+            .addCase(uploadNewBook.fulfilled, (state) => {
                 state.loading = false;
                 // state.data = (action.payload as any).results ?? action.payload;
             })
@@ -172,7 +198,7 @@ const BookSlice = createSlice({
                 state.loading = true;
                 state.error = null;
             })
-            .addCase(uploadBookImage.fulfilled, (state, action) => {
+            .addCase(uploadBookImage.fulfilled, (state) => {
                 state.loading = false;
                 // state.data = (action.payload as any).results ?? action.payload;
             })
@@ -184,7 +210,7 @@ const BookSlice = createSlice({
                 state.loading = true;
                 state.error = null;
             })
-            .addCase(updateExistingBook.fulfilled, (state, action) => {
+            .addCase(updateExistingBook.fulfilled, (state) => {
                 state.loading = false;
                 // state.data = (action.payload as any).results ?? action.payload;
             })
@@ -220,7 +246,7 @@ const BookSlice = createSlice({
                 state.loading = true;
                 state.error = null;
             })
-            .addCase(deleteBook.fulfilled, (state, action) => {
+            .addCase(deleteBook.fulfilled, (state) => {
                 state.loading = false;
             })
             .addCase(deleteBook.rejected, (state, action) => {
@@ -245,7 +271,7 @@ const BookSlice = createSlice({
             })
             .addCase(getBundleDetails.fulfilled, (state, action) => {
                 state.loading = false;
-                console.log(action.payload,'kaddu')
+                console.log(action.payload, 'kaddu')
                 state.bundledata = action.payload as any
             })
             .addCase(getBundleDetails.rejected, (state, action) => {
