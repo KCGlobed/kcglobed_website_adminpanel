@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { Website_URL } from "../../../utils/constants";
 
 interface SeoData {
     totalSeoPages: number;
@@ -11,7 +12,7 @@ export default function SeoPagesTable() {
     console.log(seoData, 'da')
     useEffect(() => {
         // Replace with your API endpoint
-        fetch("http://localhost:3000/api/route-count")
+        fetch(`${Website_URL}/api/route-count`)
             .then((res) => res.json())
             .then((data) => setSeoData(data))
             .catch((err) => console.error("Error fetching SEO pages:", err));

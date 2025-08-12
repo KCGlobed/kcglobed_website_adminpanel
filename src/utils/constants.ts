@@ -1,15 +1,19 @@
 // src/utils/baseUrl.ts
 
 let BASE_URL: string;
-
+let Website_URL: string;
 const DEV_URL = 'https://backend-dev-254015706580.asia-south2.run.app/api/';
 const PROD_URL = 'https://backend-prod-254015706580.asia-south2.run.app/api/';
+const LOCAL_URL = 'https://kcglobed-website-427233911753.europe-west1.run.app';
+const DEPLOYED_URL = 'https://kcglobed.com';
 
 const savedMode = localStorage.getItem('app_mode');
 if (savedMode === 'production') {
   BASE_URL = PROD_URL;
+  Website_URL = DEPLOYED_URL;
 } else {
   BASE_URL = DEV_URL;
+  Website_URL = LOCAL_URL;
 }
 
 export const changeMode = (isProd: boolean, reload: boolean = true): void => {
@@ -21,7 +25,7 @@ export const changeMode = (isProd: boolean, reload: boolean = true): void => {
 };
 
 export const getBaseUrl = (): string => BASE_URL;
-export { BASE_URL };
+export { BASE_URL, Website_URL };
 
 
 const PAGE_TYPES = [
