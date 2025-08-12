@@ -38,6 +38,7 @@ import Authors from "../pages/dashboard/Book/Authors";
 import AuthorForm from "../pages/dashboard/Book/AuthorForm";
 import Sales from "../pages/dashboard/sales/Sale";
 import InCompleteSale from "../pages/dashboard/sales/InCompleteSale";
+import SeoPagesTable from "../pages/dashboard/dynamic-pages/SeoPage";
 
 export default function AppRoutes() {
   return (
@@ -66,6 +67,7 @@ export default function AppRoutes() {
           <Route path="dynamic-pages" element={<DynamicPages />} />
           <Route path="dynamic-pages/names" element={<PageName />} />
           <Route path="dynamic-pages/names/create" element={<CreatePageName />} />
+          <Route path="dynamic-pages/seo-pages" element={<SeoPagesTable />} />
           <Route path="create/dynamic-page" element={<CreatePage />} />
           <Route path="dynamic-page/edit/:id" element={<UpdatePage />} />
           <Route path="books" element={<Book />} />

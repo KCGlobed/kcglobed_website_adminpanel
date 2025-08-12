@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import LexicalEditor from "../../../components/TextEditor";
-import { useAppDispatch } from "../../../hooks/useRedux";
-import { getBookImage, updateExistingBook } from "../../../store/slices/bookSlice";
+import { useAppDispatch, useAppSelector } from "../../../hooks/useRedux";
+import { getAllAuthors, getAllBooks, getBookImage, updateExistingBook } from "../../../store/slices/bookSlice";
 import Button from "../../../components/TextEditor/ui/Button";
 import { FaArrowLeft } from "react-icons/fa";
+import { addRelatedBooks, assignAuthorToBook, deleteBookAuthor, deleteRelatedBook, getBookAuthorsApi, getRelatedBooks } from "../../../services/book";
 
 interface Book {
     id?: number;
@@ -21,7 +22,7 @@ interface Book {
     discount_type: string | null;
     publisher: string;
     isbn: string | null;
-    gst_amount: number;
+    gst_percentage: number;
     total_price: number;
     usa_original_price: number;
     usa_discount_percentage: number;
@@ -36,12 +37,18 @@ interface Book {
 
 const UpdateBookForm: React.FC = () => {
     const location = useLocation();
+    const [initialAuthor, setInitialAuthor] = useState('')
+    const [assignAuthor, setAssignAuthor] = useState()
     const navigate = useNavigate();
     const dispatch = useAppDispatch();
+    const [alreadyRelatedBooks, setAlreadyRelatedBooks] = useState([]);
+    const { authors, data } = useAppSelector(state => state.books);
     const book: Book = location.state?.book;
+    const [idForDeleteAuthor, setIdForDeleteAuthor] = useState('')
     const [formData, setFormData] = useState<Book | null>(null);
     const [previewImage, setPreviewImage] = useState<{ file?: File; url: string; isNew: boolean } | null>(null);
-
+    const [dropdownOpen, setDropdownOpen] = useState(false);
+    const [related_books, setRelatedBooks] = useState<string[]>([]);
     // Prefill from backend
     useEffect(() => {
         if (book && book.id !== undefined) {
@@ -52,9 +59,24 @@ const UpdateBookForm: React.FC = () => {
             }
         }
     }, [book]);
+    const getBookAuthors = async () => {
+        try {
+            const res = await getBookAuthorsApi(book.id);
+            if (res && res.length > 0) {
+                setIdForDeleteAuthor(res[0]?.id || '')
+                const authorId = res[0]?.author_info?.id || '';
+                setAssignAuthor(authorId);
+                setInitialAuthor(authorId);
+            }
+        } catch (error) {
 
-    if (!formData) return <div>Loading...</div>;
-
+        }
+    }
+    const handleToggleBook = (id: string) => {
+        setRelatedBooks((prev) =>
+            prev.includes(id) ? prev.filter((bookId) => bookId !== id) : [...prev, id]
+        );
+    };
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         const { name, value, type } = e.target;
         let parsedValue: any = value;
@@ -106,12 +128,54 @@ const UpdateBookForm: React.FC = () => {
         }
         try {
             await dispatch(updateExistingBook({ data, id: formData.id })).unwrap();
+            if (assignAuthor && assignAuthor !== initialAuthor) {
+                await deleteBookAuthor(idForDeleteAuthor);
+                await assignAuthorToBook({ book_id: book.id, author_id: assignAuthor });
+            }
+            if (related_books?.length) {
+                const deletedIds = alreadyRelatedBooks
+                    .filter((item: any) => !related_books.includes(item.related_book))
+                    .map((item: any) => item.id);
+                if (deletedIds?.length) {
+                    await deleteRelatedBook({ related_book_id: deletedIds });
+                }
+                const alreadyIds = alreadyRelatedBooks.map((item: any) => item.related_book);
+                const newIds = related_books.filter(id => !alreadyIds.includes(id));
+                if (newIds?.length) {
+                    await addRelatedBooks({
+                        book_id: book.id,
+                        related_book_id: newIds.map(id => Number(id))
+                    });
+                }
+            }
             navigate("/dashboard/books")
         } catch (err) {
             console.error("Error updating book or uploading images", err);
         }
     };
+    // when you set alreadyRelatedBooks
+    const getAlreadyRelatedBooks = async () => {
+        try {
+            const res = await getRelatedBooks(book.id);
+            if (res && res.length > 0) {
+                setRelatedBooks(res.map((b: any) => b.related_book));
 
+                setAlreadyRelatedBooks(res);
+                console.log(res, ' res');
+            }
+        } catch (error) {
+            console.error("Error fetching related books", error);
+        }
+    };
+    useEffect(() => {
+        dispatch(getAllAuthors() as any)
+        getBookAuthors()
+        getAlreadyRelatedBooks()
+    }, [])
+    useEffect(() => {
+        dispatch(getAllBooks() as any);
+    }, [])
+    if (!formData) return <div>Loading...</div>;
     return (
         <div className="max-w-8xl mx-auto p-6 bg-white rounded-lg shadow-sm border border-gray-100">
             <div className="flex justify-between items-center"> <h2 className="text-2xl font-semibold mb-6 text-gray-800 border-b pb-3 flex items-center">
@@ -143,48 +207,31 @@ const UpdateBookForm: React.FC = () => {
                             />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Course Name</label>
-                            <input
-                                name="course_name"
-                                value={formData.course_name}
-                                onChange={handleChange}
-                                placeholder="Course Name"
-                                required
-                                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Subject Name</label>
-                            <input
-                                name="subject_name"
-                                value={formData.subject_name}
-                                onChange={handleChange}
-                                placeholder="Subject Name"
-                                required
-                                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">No. of Pages</label>
-                            <input
-                                name="no_of_pages"
-                                type="number"
-                                value={formData.no_of_pages}
-                                onChange={handleChange}
-                                placeholder="e.g. 120"
-                                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Language</label>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Author Name</label>
                             <select
-                                name="language"
-                                value={formData.language}
+                                value={assignAuthor || ""}
+                                onChange={(e) => setAssignAuthor(e.target.value as any)}
+                                required
+                                className="w-full px-4 py-2 border border-gray-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            >
+                                <option value="">Select Author</option>
+                                {Array.isArray(authors) && authors?.map((author: any) => (
+                                    <option key={author.id || author.uuid || author.name} value={author.id}>
+                                        {author.name}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Stock Status</label>
+                            <select
+                                name="out_of_stock"
+                                value={formData.out_of_stock}
                                 onChange={handleChange}
                                 className="w-full px-4 py-2 border border-gray-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                             >
-                                <option value="English">English</option>
-                                <option value="Hindi">Hindi</option>
+                                <option value={0}>In Stock</option>
+                                <option value={1}>Out of Stock</option>
                             </select>
                         </div>
                         <div>
@@ -216,6 +263,21 @@ const UpdateBookForm: React.FC = () => {
                             </div>
                         </div>
                     </div>
+                    <div className="space-y-2">
+                        <label className="block text-sm font-medium text-gray-700">
+                            Table of Contents
+                        </label>
+                        <div className="border border-gray-300 rounded-md p-2 bg-white">
+                            <LexicalEditor
+                                type="description"
+                                value={formData.description}
+                                onChange={(value) =>
+                                    setFormData(prev => prev ? { ...prev, description: value } : prev)
+                                }
+                                placeholder="Write a detailed description..."
+                            />
+                        </div>
+                    </div>
                 </div>
                 {/* Section 2: Pricing */}
                 <div className="p-6 bg-gray-50 rounded-lg shadow-md space-y-4">
@@ -244,7 +306,7 @@ const UpdateBookForm: React.FC = () => {
                             />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Total Price</label>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Selling Price</label>
                             <input
                                 name="total_price"
                                 type="number"
@@ -254,7 +316,7 @@ const UpdateBookForm: React.FC = () => {
                                 className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                             />
                         </div>
-                        <div>
+                        {/* <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">Discount Type</label>
                             <input
                                 name="discount_type"
@@ -263,7 +325,7 @@ const UpdateBookForm: React.FC = () => {
                                 placeholder="e.g. Flat or %"
                                 className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                             />
-                        </div>
+                        </div> */}
                     </div>
                 </div>
                 {/* Section 3: USA Pricing */}
@@ -307,14 +369,14 @@ const UpdateBookForm: React.FC = () => {
                 </div>
                 {/* Section 4: Additional Info */}
                 <div className="p-6 bg-gray-50 rounded-lg shadow-md space-y-4">
-                    <h2 className="text-lg font-semibold text-gray-700">Additional Information</h2>
+                    <h2 className="text-lg font-semibold text-gray-700">Product Information</h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">GST Amount</label>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">GST Amount(%)</label>
                             <input
-                                name="gst_amount"
+                                name="gst_percentage"
                                 type="number"
-                                value={formData.gst_amount}
+                                value={formData.gst_percentage}
                                 onChange={handleChange}
                                 placeholder="₹"
                                 className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -341,6 +403,29 @@ const UpdateBookForm: React.FC = () => {
                             />
                         </div>
                         <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">No. of Pages</label>
+                            <input
+                                name="no_of_pages"
+                                type="number"
+                                value={formData.no_of_pages}
+                                onChange={handleChange}
+                                placeholder="e.g. 120"
+                                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Language</label>
+                            <select
+                                name="language"
+                                value={formData.language}
+                                onChange={handleChange}
+                                className="w-full px-4 py-2 border border-gray-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            >
+                                <option value="English">English</option>
+                                <option value="Hindi">Hindi</option>
+                            </select>
+                        </div>
+                        <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">Visibility</label>
                             <select
                                 name="visible"
@@ -352,18 +437,7 @@ const UpdateBookForm: React.FC = () => {
                                 <option value={0}>Hidden</option>
                             </select>
                         </div>
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Stock Status</label>
-                            <select
-                                name="out_of_stock"
-                                value={formData.out_of_stock}
-                                onChange={handleChange}
-                                className="w-full px-4 py-2 border border-gray-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            >
-                                <option value={0}>In Stock</option>
-                                <option value={1}>Out of Stock</option>
-                            </select>
-                        </div>
+
                         {/* isBundle Toggle */}
                         <div className="flex items-center mt-6">
                             <input
@@ -382,7 +456,86 @@ const UpdateBookForm: React.FC = () => {
                 </div>
                 {/* Section 5: Descriptions */}
                 <div className="p-6 bg-gray-50 rounded-lg shadow-md space-y-6">
-                    <h2 className="text-lg font-semibold text-gray-700">Descriptions</h2>
+                    <h2 className="text-lg font-semibold text-gray-700">Additional Information (Optional)</h2>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Course Name</label>
+                            <input
+                                name="course_name"
+                                value={formData.course_name}
+                                onChange={handleChange}
+                                placeholder="Course Name"
+                                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Subject Name</label>
+                            <input
+                                name="subject_name"
+                                value={formData.subject_name}
+                                onChange={handleChange}
+                                placeholder="Subject Name"
+                                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            />
+                        </div>
+                    </div>
+                    <div className="relative">
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Related Books
+                        </label>
+
+                        {/* Dropdown trigger */}
+                        <div
+                            className="w-full px-4 py-2 border border-gray-300 rounded-md bg-white cursor-pointer flex flex-wrap gap-2 min-h-[42px]"
+                            onClick={() => setDropdownOpen((prev) => !prev)}
+                        >
+                            {related_books.length === 0 && (
+                                <span className="text-gray-400">Select books...</span>
+                            )}
+                            {related_books.map((id) => {
+                                const book = data?.find((b) => b.id === id);
+                                return (
+                                    <span
+                                        key={id}
+                                        className="bg-blue-100 text-blue-800 text-sm px-2 py-1 rounded-full"
+                                    >
+                                        {book?.name}
+                                    </span>
+                                );
+                            })}
+                        </div>
+
+                        {/* Dropdown options */}
+                        {dropdownOpen && (
+                            <div className="absolute z-10 mt-2 w-full bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto">
+                                {data.map((book) => (
+                                    <div
+                                        key={book.id}
+                                        onClick={() => handleToggleBook(book.id)}
+                                        className={`px-4 py-2 cursor-pointer hover:bg-blue-100 flex items-center justify-between ${related_books.includes(book.id) ? "bg-blue-50" : ""
+                                            }`}
+                                    >
+                                        <span>{book.name}</span>
+                                        {related_books.includes(book.id) && (
+                                            <svg
+                                                className="h-4 w-4 text-blue-600"
+                                                fill="none"
+                                                stroke="currentColor"
+                                                viewBox="0 0 24 24"
+                                            >
+                                                <path
+                                                    strokeLinecap="round"
+                                                    strokeLinejoin="round"
+                                                    strokeWidth="2"
+                                                    d="M5 13l4 4L19 7"
+                                                />
+                                            </svg>
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
                     {/* Short Description */}
                     <div className="space-y-2">
                         <label className="block text-sm font-medium text-gray-700">
@@ -398,23 +551,10 @@ const UpdateBookForm: React.FC = () => {
                                 placeholder="Write a brief description..."
                             />
                         </div>
+
                     </div>
                     {/* Full Description */}
-                    <div className="space-y-2">
-                        <label className="block text-sm font-medium text-gray-700">
-                            Table of Contents
-                        </label>
-                        <div className="border border-gray-300 rounded-md p-2 bg-white">
-                            <LexicalEditor
-                                type="description"
-                                value={formData.description}
-                                onChange={(value) =>
-                                    setFormData(prev => prev ? { ...prev, description: value } : prev)
-                                }
-                                placeholder="Write a detailed description..."
-                            />
-                        </div>
-                    </div>
+
                 </div>
                 {/* Submit Button */}
                 <div className="text-right">

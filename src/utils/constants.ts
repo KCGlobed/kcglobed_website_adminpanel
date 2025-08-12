@@ -7,7 +7,7 @@ const PROD_URL = 'https://backend-prod-254015706580.asia-south2.run.app/api/';
 
 const savedMode = localStorage.getItem('app_mode');
 if (savedMode === 'production') {
-  BASE_URL = DEV_URL;
+  BASE_URL = PROD_URL;
 } else {
   BASE_URL = DEV_URL;
 }

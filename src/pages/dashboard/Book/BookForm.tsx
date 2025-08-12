@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from "react";
 import LexicalEditor from "../../../components/TextEditor";
 import { useAppDispatch, useAppSelector } from "../../../hooks/useRedux";
-import { getAllAuthors, uploadNewBook } from "../../../store/slices/bookSlice";
+import { getAllAuthors, uploadNewBook, getAllBooks } from "../../../store/slices/bookSlice";
 import Button from "../../../components/TextEditor/ui/Button";
 import { FaArrowLeft } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import { useAlert } from "../../../context/AlertContext";
-import { addBookImage, assignAuthorToBook } from "../../../services/book";
+import { addBookImage, addRelatedBooks, assignAuthorToBook } from "../../../services/book";
 
 interface Book {
     id?: number;
@@ -41,11 +41,14 @@ interface BookFormProps {
 }
 
 const BookForm: React.FC<BookFormProps> = () => {
-    const { loading, authors } = useAppSelector(state => state.books)
+    const { loading, authors, data } = useAppSelector(state => state.books)
     const [highImages, setHighImages] = useState<{ file: File; url: string }[]>([]);
     const [mediumImages, setMediumImages] = useState<{ file: File; url: string }[]>([]);
     const [lowImages, setLowImages] = useState<{ file: File; url: string }[]>([]);
     const [assignAuthor, setAssignAuthor] = useState()
+    const [dropdownOpen, setDropdownOpen] = useState(false);
+    const [related_books, setRelatedBooks] = useState<string[]>([]);
+
     const { showAlert } = useAlert()
     const navigate = useNavigate()
     const [formData, setFormData] = useState<Book & { is_bundle: boolean }>({
@@ -81,6 +84,11 @@ const BookForm: React.FC<BookFormProps> = () => {
         };
     }, [previewImage]);
 
+    const handleToggleBook = (id: string) => {
+        setRelatedBooks((prev) =>
+            prev.includes(id) ? prev.filter((bookId) => bookId !== id) : [...prev, id]
+        );
+    };
     const handleChange = (
         e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
     ) => {
@@ -155,6 +163,12 @@ const BookForm: React.FC<BookFormProps> = () => {
             if (assignAuthor) {
                 await assignAuthorToBook({ book_id: res.data.book_id, author_id: assignAuthor });
             }
+            if (related_books?.length) {
+                await addRelatedBooks({
+                    book_id: res.data.book_id,
+                    related_book_id: related_books.map(id => Number(id))
+                });
+            }
             // // prepare second API payload
             const formData = new FormData();
             formData.append("book_id", res.data.book_id);
@@ -216,8 +230,8 @@ const BookForm: React.FC<BookFormProps> = () => {
 
     useEffect(() => {
         dispatch(getAllAuthors() as any)
+        dispatch(getAllBooks() as any)
     }, [])
-
     return (
         <div className="max-w-8xl mx-auto p-6 bg-white rounded-lg shadow-sm border border-gray-100">
             <div className="flex items-center justify-between">  <h2 className="text-2xl font-semibold mb-6 text-gray-800 border-b pb-3 flex items-center">
@@ -622,6 +636,64 @@ const BookForm: React.FC<BookFormProps> = () => {
                             />
                         </div>
                     </div>
+                    <div className="relative">
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Related Books
+                        </label>
+
+                        {/* Dropdown trigger */}
+                        <div
+                            className="w-full px-4 py-2 border border-gray-300 rounded-md bg-white cursor-pointer flex flex-wrap gap-2 min-h-[42px]"
+                            onClick={() => setDropdownOpen((prev) => !prev)}
+                        >
+                            {related_books.length === 0 && (
+                                <span className="text-gray-400">Select books...</span>
+                            )}
+                            {related_books.map((id) => {
+                                const book = data?.find((b) => b.id === id);
+                                return (
+                                    <span
+                                        key={id}
+                                        className="bg-blue-100 text-blue-800 text-sm px-2 py-1 rounded-full"
+                                    >
+                                        {book?.name}
+                                    </span>
+                                );
+                            })}
+                        </div>
+
+                        {/* Dropdown options */}
+                        {dropdownOpen && (
+                            <div className="absolute z-10 mt-2 w-full bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto">
+                                {data.map((book) => (
+                                    <div
+                                        key={book.id}
+                                        onClick={() => handleToggleBook(book.id)}
+                                        className={`px-4 py-2 cursor-pointer hover:bg-blue-100 flex items-center justify-between ${related_books.includes(book.id) ? "bg-blue-50" : ""
+                                            }`}
+                                    >
+                                        <span>{book.name}</span>
+                                        {related_books.includes(book.id) && (
+                                            <svg
+                                                className="h-4 w-4 text-blue-600"
+                                                fill="none"
+                                                stroke="currentColor"
+                                                viewBox="0 0 24 24"
+                                            >
+                                                <path
+                                                    strokeLinecap="round"
+                                                    strokeLinejoin="round"
+                                                    strokeWidth="2"
+                                                    d="M5 13l4 4L19 7"
+                                                />
+                                            </svg>
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+
                     {/* Short Description */}
                     <div className="space-y-2">
                         <label className="block text-sm font-medium text-gray-700">
