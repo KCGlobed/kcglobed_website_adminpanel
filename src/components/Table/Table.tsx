@@ -26,6 +26,9 @@ type Props<T> = {
   filters?: Record<keyof T, { type: 'text' | 'alpha-range'; value: string }>;
   onFilterChange?: (filters: Record<keyof T, { type: 'text' | 'alpha-range'; value: string }>) => void;
   onSort?: (key: keyof T, direction: SortDirection) => void
+  setSortConfig?: any
+  alphaRange?: Record<string, { from?: string; to?: string }>;
+  setAlphaRange?: React.Dispatch<React.SetStateAction<Record<string, { from?: string; to?: string }>>>;
 };
 export type SortDirection = "asc" | "desc";
 function DynamicServerTable<T extends object>({
@@ -41,11 +44,13 @@ function DynamicServerTable<T extends object>({
   onFilterChange,
   enableFilters = false,
   filters,
+  setSortConfig,
+  alphaRange,
+  setAlphaRange
 }: Props<T>) {
   const totalPages = Math.ceil(totalCount / pageSize);
   const [openFilterKey, setOpenFilterKey] = React.useState<keyof T | null>(null);
   const [filterInput, setFilterInput] = React.useState<Record<keyof T, string>>();
-  const [alphaRange, setAlphaRange] = useState({});
   console.log('Alpha Range:', alphaRange, 'kkk', filters);
   const [activeSort, setActiveSort] = useState<{ key: keyof T | null; direction: SortDirection }>({
     key: null,
@@ -115,7 +120,7 @@ function DynamicServerTable<T extends object>({
       ) : (
         <>
           {/* Scrollable Table with Fixed Header */}
-          <div className="relative max-h-[500px] overflow-y-auto custom-scrollbar">
+          <div className="relative max-h-[500px] min-h-[400px!important] overflow-y-auto custom-scrollbar">
             <table className="min-w-full table-fixed divide-y divide-gray-200">
               <thead
                 className="sticky top-0 z-10"
@@ -169,7 +174,7 @@ function DynamicServerTable<T extends object>({
                               <button
                                 className="w-full text-left px-4 py-2 hover:bg-gray-100"
                                 onClick={() => {
-                                  handleSort(col.key, 'asc');
+                                  setSortConfig({ key: col.key as string, direction: 'asc' });
                                   setOpenFilterKey(null);
                                 }}
                               >
@@ -178,7 +183,7 @@ function DynamicServerTable<T extends object>({
                               <button
                                 className="w-full text-left px-4 py-2 hover:bg-gray-100"
                                 onClick={() => {
-                                  handleSort(col.key, 'desc');
+                                  setSortConfig({ key: col.key as string, direction: 'desc' });
                                   setOpenFilterKey(null);
                                 }}
                               >
@@ -274,6 +279,33 @@ function DynamicServerTable<T extends object>({
 
                             {/* Action Buttons */}
                             <div className="flex justify-end gap-2 px-4 py-2 border-t border-gray-200">
+                              <button
+                                onClick={() => {
+                                  // Clear alphaRange for this column
+                                  setAlphaRange((prev) => {
+                                    const updated = { ...prev };
+                                    delete updated[col.key];
+                                    return updated;
+                                  });
+
+                                  // Clear text filter input for this column
+                                  setFilterInput((prev) => {
+                                    const updated = { ...prev };
+                                    delete updated[col.key];
+                                    return updated;
+                                  });
+
+                                  // Clear filter from main filter state
+                                  const updatedFilters = { ...filters };
+                                  delete updatedFilters[col.key];
+                                  onFilterChange?.(updatedFilters);
+
+                                  setOpenFilterKey(null);
+                                }}
+                                className="px-3 py-1 rounded text-sm text-red-600 hover:bg-red-100"
+                              >
+                                Reset
+                              </button>
                               <button
                                 onClick={() => setOpenFilterKey(null)}
                                 className="px-3 py-1 rounded text-sm text-gray-600 hover:bg-gray-100"

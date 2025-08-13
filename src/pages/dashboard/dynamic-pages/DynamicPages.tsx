@@ -20,18 +20,23 @@ const DynamicPages: React.FC = () => {
   const [filters, setFilters] = useState<Record<string, { type: 'text' | 'alpha-range'; value: any }>>({});
   const [selectedPageType, setSelectedPageType] = useState<string>('');
   const { data, loading, count } = useAppSelector((state) => state.pages);
+  const [alphaRange, setAlphaRange] = useState<
+    Record<string, { from?: string; to?: string }>
+  >({});
   const { showConfirm } = useAlert()
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
-  const filtereData = useMemo(() => {
-    let result = data;
+  const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>(null);
 
-    // Pehle page type filter lagao
+  const filtereData = useMemo(() => {
+    let result = [...data]; // clone to avoid mutating
+
+    // Step 1: Filter by selected page type
     if (selectedPageType) {
       result = result.filter((item) => item['page_type'] === selectedPageType);
     }
 
-    // Table ke filters lagao (frontend pe)
+    // Step 2: Apply column filters
     Object.entries(filters).forEach(([key, filter]) => {
       if (filter.type === 'text') {
         result = result.filter((item) =>
@@ -46,8 +51,21 @@ const DynamicPages: React.FC = () => {
       }
     });
 
+    // Step 3: Apply sorting
+    if (sortConfig) {
+      result.sort((a, b) => {
+        const aVal = String(a[sortConfig.key] || '').toUpperCase();
+        const bVal = String(b[sortConfig.key] || '').toUpperCase();
+
+        if (aVal < bVal) return sortConfig.direction === 'asc' ? -1 : 1;
+        if (aVal > bVal) return sortConfig.direction === 'asc' ? 1 : -1;
+        return 0;
+      });
+    }
+
     return result;
-  }, [data, selectedPageType, filters]);
+  }, [data, selectedPageType, filters, sortConfig]);
+
 
   const handleEdit = (id: string | number, row: ExcellenceSection) => {
     navigate(`/dashboard/dynamic-page/edit/${id}`, { state: { pageData: row } });
@@ -186,10 +204,12 @@ const DynamicPages: React.FC = () => {
         loading={loading}
         totalCount={filteredData.length}
         onPageChange={setCurrentPage}
-        enableFilters={false}
+        enableFilters={true}
         filters={filters}
         onFilterChange={setFilters}
-      
+        setSortConfig={setSortConfig}
+        alphaRange={alphaRange}
+        setAlphaRange={setAlphaRange}
       />
 
     </div>
