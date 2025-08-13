@@ -267,6 +267,9 @@ const CreatePage: React.FC = () => {
                                 className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
                                 required
                             >
+                                <option value=''>
+                                    Select Section Type
+                                </option>
                                 {subSec.map((option: any) => (
                                     <option key={option.id} value={option.id}>
                                         {option.section_type}

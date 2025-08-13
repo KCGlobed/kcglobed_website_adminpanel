@@ -1,5 +1,4 @@
 import { useForm } from 'react-hook-form'
-import { useLocation, useParams } from 'react-router-dom'
 import { useAppDispatch, useAppSelector } from '../../../hooks/useRedux'
 import Button from '../../../components/TextEditor/ui/Button'
 import { createNewPageName, createNewSectionName, getAllPageNames } from '../../../store/slices/pagesSlice'
@@ -14,12 +13,13 @@ const FormError = ({ error }: { error?: string }) =>
 interface PageFormData {
     page_type: string
     section_type?: string
-    meta_title: string
-    meta_description: string
-    meta_keyword: string
-    canonical_url: string
-    schema_markup: string
+    meta_title?: string
+    meta_description?: string
+    meta_keyword?: string
+    canonical_url?: string
+    schema_markup?: string
 }
+
 
 function CreatePageName() {
     const { loading, data } = useAppSelector(state => state.pages)
@@ -116,7 +116,7 @@ function CreatePageName() {
                     </div>
                 </form>
                 {/* Form 2: Text-input-based page_type */}
-                <form onSubmit={handleSubmitText(onSubmitText)} className="flex-1 bg-gray-50 rounded p-6">
+                <form noValidate onSubmit={handleSubmitText(onSubmitText)} className="flex-1 bg-gray-50 rounded p-6">
                     <h2 className="text-2xl font-bold mb-4">Create New Page</h2>
 
                     {/* Common Tailwind class for input fields */}
@@ -132,7 +132,6 @@ function CreatePageName() {
                             className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${errorsText.page_type ? 'border-red-500' : 'border-gray-300'}`}
                             {...registerText('page_type', { required: 'Page type is required' })}
                         />
-                        <FormError error={errorsText.page_type?.message} />
                     </div>
 
                     {/* Meta Title */}
@@ -142,9 +141,8 @@ function CreatePageName() {
                             id="meta_title"
                             type="text"
                             className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${errorsText.meta_title ? 'border-red-500' : 'border-gray-300'}`}
-                            {...registerText('meta_title', { required: 'Meta title is required' })}
+                            {...registerText('meta_title')}
                         />
-                        <FormError error={errorsText.meta_title?.message} />
                     </div>
 
                     {/* Meta Description */}
@@ -153,9 +151,8 @@ function CreatePageName() {
                         <textarea
                             id="meta_description"
                             className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${errorsText.meta_description ? 'border-red-500' : 'border-gray-300'}`}
-                            {...registerText('meta_description', { required: 'Meta description is required' })}
+                            {...registerText('meta_description')}
                         />
-                        <FormError error={errorsText.meta_description?.message} />
                     </div>
 
                     {/* Meta Keywords */}
@@ -165,10 +162,9 @@ function CreatePageName() {
                             id="meta_keyword"
                             type="text"
                             placeholder="e.g., blog,react,seo"
-                            className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${errorsText.meta_keyword ? 'border-red-500' : 'border-gray-300'}`}
-                            {...registerText('meta_keyword', { required: 'Meta keywords are required' })}
+                            className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 border-gray-300`}
+                            {...registerText('meta_keyword')}
                         />
-                        <FormError error={errorsText.meta_keyword?.message} />
                     </div>
 
                     {/* Canonical URL */}
@@ -178,9 +174,8 @@ function CreatePageName() {
                             id="canonical_url"
                             type="text"
                             className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${errorsText.canonical_url ? 'border-red-500' : 'border-gray-300'}`}
-                            {...registerText('canonical_url', { required: 'Canonical URL is required' })}
+                            {...registerText('canonical_url')}
                         />
-                        <FormError error={errorsText.canonical_url?.message} />
                     </div>
 
                     {/* Schema Markup */}
@@ -189,9 +184,8 @@ function CreatePageName() {
                         <textarea
                             id="schema_markup"
                             className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${errorsText.schema_markup ? 'border-red-500' : 'border-gray-300'}`}
-                            {...registerText('schema_markup', { required: 'Schema markup is required' })}
+                            {...registerText('schema_markup')}
                         />
-                        <FormError error={errorsText.schema_markup?.message} />
                     </div>
 
                     <div className="mt-6">

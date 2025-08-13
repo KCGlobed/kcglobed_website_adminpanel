@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { FiChevronLeft, FiChevronRight, FiFilter } from 'react-icons/fi';
 import { useModal } from '../../context/ModalContext';
 
@@ -21,13 +21,13 @@ type Props<T> = {
   totalCount: number;
   loading?: boolean;
   onPageChange: (page: number) => void;
-  onSort?: (key: keyof T, direction: 'asc' | 'desc') => void;
   className?: string;
   enableFilters?: boolean;
   filters?: Record<keyof T, { type: 'text' | 'alpha-range'; value: string }>;
   onFilterChange?: (filters: Record<keyof T, { type: 'text' | 'alpha-range'; value: string }>) => void;
+  onSort?: (key: keyof T, direction: SortDirection) => void
 };
-
+export type SortDirection = "asc" | "desc";
 function DynamicServerTable<T extends object>({
   data,
   columns,
@@ -40,15 +40,16 @@ function DynamicServerTable<T extends object>({
   className = '',
   onFilterChange,
   enableFilters = false,
+  filters,
 }: Props<T>) {
   const totalPages = Math.ceil(totalCount / pageSize);
   const [openFilterKey, setOpenFilterKey] = React.useState<keyof T | null>(null);
   const [filterInput, setFilterInput] = React.useState<Record<keyof T, string>>();
   const [alphaRange, setAlphaRange] = useState({});
-
-  const [activeSort, setActiveSort] = React.useState<{ key: keyof T | null; direction: 'asc' | 'desc' }>({
+  console.log('Alpha Range:', alphaRange, 'kkk', filters);
+  const [activeSort, setActiveSort] = useState<{ key: keyof T | null; direction: SortDirection }>({
     key: null,
-    direction: 'asc',
+    direction: "asc",
   });
   const { showModal } = useModal();
 
@@ -77,10 +78,27 @@ function DynamicServerTable<T extends object>({
 
 
 
-  const handleSort = (key: keyof T, direction: 'asc' | 'desc') => {
+  const handleSort = (key: keyof T, direction: SortDirection) => {
     setActiveSort({ key, direction });
-    onSort?.(key, direction);
+
+    if (onSort) {
+      // 🔹 If API sort function exists, use it
+      onSort(key, direction);
+    }
+    // Else frontend sort will happen via useMemo below
   };
+
+  // Frontend sorting
+  const sortedData = useMemo(() => {
+    if (!activeSort.key) return data;
+    return [...data].sort((a, b) => {
+      const aVal = String(a[activeSort.key] ?? "").toLowerCase();
+      const bVal = String(b[activeSort.key] ?? "").toLowerCase();
+      if (aVal < bVal) return activeSort.direction === "asc" ? -1 : 1;
+      if (aVal > bVal) return activeSort.direction === "asc" ? 1 : -1;
+      return 0;
+    });
+  }, [data, activeSort]);
 
 
   return (

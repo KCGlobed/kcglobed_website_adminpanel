@@ -17,11 +17,37 @@ interface ExcellenceSection extends ExcellenceSectionBase { [key: string]: any }
 
 const DynamicPages: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
+  const [filters, setFilters] = useState<Record<string, { type: 'text' | 'alpha-range'; value: any }>>({});
   const [selectedPageType, setSelectedPageType] = useState<string>('');
   const { data, loading, count } = useAppSelector((state) => state.pages);
   const { showConfirm } = useAlert()
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
+  const filtereData = useMemo(() => {
+    let result = data;
+
+    // Pehle page type filter lagao
+    if (selectedPageType) {
+      result = result.filter((item) => item['page_type'] === selectedPageType);
+    }
+
+    // Table ke filters lagao (frontend pe)
+    Object.entries(filters).forEach(([key, filter]) => {
+      if (filter.type === 'text') {
+        result = result.filter((item) =>
+          String(item[key] || '').toLowerCase().includes(filter.value.toLowerCase())
+        );
+      } else if (filter.type === 'alpha-range') {
+        const { from, to } = filter.value;
+        result = result.filter((item) => {
+          const val = String(item[key] || '').toUpperCase();
+          return val >= from && val <= to;
+        });
+      }
+    });
+
+    return result;
+  }, [data, selectedPageType, filters]);
 
   const handleEdit = (id: string | number, row: ExcellenceSection) => {
     navigate(`/dashboard/dynamic-page/edit/${id}`, { state: { pageData: row } });
@@ -81,7 +107,7 @@ const DynamicPages: React.FC = () => {
             href={row.slider_video}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-blue-600 underline" 
+            className="text-blue-600 underline"
           >
             View Video
           </a>
@@ -141,7 +167,7 @@ const DynamicPages: React.FC = () => {
           </Button>
         </div>
       </div>
-      <DynamicServerTable<ExcellenceSection>
+      {/* <DynamicServerTable<ExcellenceSection>
         data={filteredData}
         columns={excellenceColumns}
         currentPage={currentPage}
@@ -149,7 +175,23 @@ const DynamicPages: React.FC = () => {
         loading={loading}
         totalCount={count}
         onPageChange={setCurrentPage}
+        enableFilters={true}
+        onFilterChange={() => { }}
+      /> */}
+      <DynamicServerTable<ExcellenceSection>
+        data={filtereData}
+        columns={excellenceColumns}
+        currentPage={currentPage}
+        pageSize={20}
+        loading={loading}
+        totalCount={filteredData.length}
+        onPageChange={setCurrentPage}
+        enableFilters={false}
+        filters={filters}
+        onFilterChange={setFilters}
+      
       />
+
     </div>
   );
 };
