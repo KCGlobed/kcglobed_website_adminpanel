@@ -51,7 +51,6 @@ function DynamicServerTable<T extends object>({
   const totalPages = Math.ceil(totalCount / pageSize);
   const [openFilterKey, setOpenFilterKey] = React.useState<keyof T | null>(null);
   const [filterInput, setFilterInput] = React.useState<Record<keyof T, string>>();
-  console.log('Alpha Range:', alphaRange, 'kkk', filters);
   const [activeSort, setActiveSort] = useState<{ key: keyof T | null; direction: SortDirection }>({
     key: null,
     direction: "asc",

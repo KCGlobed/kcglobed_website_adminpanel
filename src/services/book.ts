@@ -1,7 +1,7 @@
 import { apiRequest } from "./apiRequest";
 
-export const fetchAllBooks = (): Promise<any> => {
-    return apiRequest(`book/book-listing/`, "GET");
+export const fetchAllBooks = (payload): Promise<any> => {
+    return apiRequest(`book/book-listing/?page=${payload.page}`, "GET");
 };
 
 export const fetchAllAuthors = (): Promise<any> => {

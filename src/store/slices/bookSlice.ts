@@ -30,11 +30,10 @@ const initialState: BookState = {
 
 export const getAllBooks = createAsyncThunk<BookProps, void, { rejectValue: string }>(
     "Book/get",
-    async (_, { rejectWithValue }) => {
+    async (payload, { rejectWithValue }) => {
         try {
-            const data = await fetchAllBooks();
+            const data = await fetchAllBooks(payload);
             return data;
-
         } catch (error: any) {
             return rejectWithValue(error.message || "Failed to fetch blogs");
         }
@@ -165,6 +164,7 @@ const BookSlice = createSlice({
             .addCase(getAllBooks.fulfilled, (state, action) => {
                 state.loading = false;
                 state.data = (action.payload as any).results ?? action.payload;
+                state.count = (action.payload as any).count ?? action.payload.length;
             })
             .addCase(getAllBooks.rejected, (state, action) => {
                 state.loading = false;

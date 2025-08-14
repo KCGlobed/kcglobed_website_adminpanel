@@ -1,8 +1,8 @@
 
 import { apiRequest } from "./apiRequest";
 
-export const fetchEnquery = (): Promise<any> => {
-    return apiRequest(`course/get-contact-us-list`, "GET");
+export const fetchEnquery = (payload): Promise<any> => {
+    return apiRequest(`course/get-contact-us-list?page=${payload.page}`, "GET");
 };
 
 

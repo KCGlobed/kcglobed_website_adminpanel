@@ -8,7 +8,6 @@ import { useNavigate } from 'react-router-dom';
 import Button from '../../../components/TextEditor/ui/Button';
 import GlassButton from '../../../components/Button/Button';
 import { FiEdit, FiTrash } from 'react-icons/fi';
-import { formatDate } from '../../../utils';
 import { useAlert } from '../../../context/AlertContext';
 
 // Add index signature for dynamic key access
@@ -29,13 +28,11 @@ const DynamicPages: React.FC = () => {
   const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>(null);
 
   const filtereData = useMemo(() => {
-    let result = [...data]; // clone to avoid mutating
-
+    let result = [...data];
     // Step 1: Filter by selected page type
     if (selectedPageType) {
       result = result.filter((item) => item['page_type'] === selectedPageType);
     }
-
     // Step 2: Apply column filters
     Object.entries(filters).forEach(([key, filter]) => {
       if (filter.type === 'text') {
@@ -50,7 +47,6 @@ const DynamicPages: React.FC = () => {
         });
       }
     });
-
     // Step 3: Apply sorting
     if (sortConfig) {
       result.sort((a, b) => {
@@ -62,7 +58,6 @@ const DynamicPages: React.FC = () => {
         return 0;
       });
     }
-
     return result;
   }, [data, selectedPageType, filters, sortConfig]);
 
@@ -157,9 +152,34 @@ const DynamicPages: React.FC = () => {
     }
   ], [handleEdit, handleDelete]);
 
+  // useEffect(() => {
+  //   dispatch(getPagesData({ page: currentPage } as any) as any);
+  // }, [dispatch, currentPage]);
   useEffect(() => {
-    dispatch(getPagesData(currentPage as any));
-  }, [dispatch, currentPage]);
+    // Convert filters object to query params or API payload
+    const apiFilters: Record<string, any> = {};
+
+    Object.entries(filters).forEach(([key, filter]) => {
+      if (filter.type === 'text') {
+        apiFilters[key] = filter.value; // send text search
+      } else if (filter.type === 'alpha-range') {
+        apiFilters[`${key}_from`] = filter.value.from || '';
+        apiFilters[`${key}_to`] = filter.value.to || '';
+      }
+    });
+
+    if (selectedPageType) {
+      apiFilters.page_type = selectedPageType;
+    }
+
+    // Call API with filters
+    dispatch(
+      getPagesData({
+        page: currentPage,
+        ...apiFilters
+      } as any) as any
+    );
+  }, [dispatch, currentPage, filters, alphaRange, selectedPageType]);
 
   return (
     <div className='overflow-x-hidden'>
@@ -202,7 +222,7 @@ const DynamicPages: React.FC = () => {
         currentPage={currentPage}
         pageSize={20}
         loading={loading}
-        totalCount={filteredData.length}
+        totalCount={count}
         onPageChange={setCurrentPage}
         enableFilters={true}
         filters={filters}

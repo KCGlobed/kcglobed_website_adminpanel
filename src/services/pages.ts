@@ -1,7 +1,8 @@
 import { apiRequest } from "./apiRequest";
 
 export const fetchPagesData = (currentPage: any): Promise<any> => {
-    return apiRequest(`landing-page/get-homepage-content?page=${currentPage}`, "GET");
+    console.log("Fetching pages data for current page:", currentPage);
+    return apiRequest(`landing-page/get-homepage-content?page=${currentPage.page}`, "GET");
 };
 export const getAllPagesName = (): Promise<any> => {
     return apiRequest(`landing-page/get-page-list/`, "GET");

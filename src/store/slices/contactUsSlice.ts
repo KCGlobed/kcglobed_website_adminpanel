@@ -26,9 +26,9 @@ const initialState: EnquiryState = {
 
 export const getEnquery = createAsyncThunk<Enquiry, void, { rejectValue: string }>(
     "enqury/getEnquery",
-    async (_, { rejectWithValue }) => {
+    async (payload, { rejectWithValue }) => {
         try {
-            const data = await fetchEnquery();
+            const data = await fetchEnquery(payload);
             return data;
 
         } catch (error: any) {
@@ -61,8 +61,8 @@ const ContactUsSlice = createSlice({
             })
             .addCase(getEnquery.fulfilled, (state, action) => {
                 state.loading = false;
-                console.log(action, "action")
                 state.data = (action.payload as any).results ?? action.payload;
+                state.count = (action.payload as any).count ?? 0;
             })
             .addCase(getEnquery.rejected, (state, action) => {
                 state.loading = false;
