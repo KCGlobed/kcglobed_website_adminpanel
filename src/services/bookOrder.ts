@@ -10,6 +10,9 @@ export const fetchSuccessBook = (): Promise<any> => {
     return apiRequest(`book/get-purchased-books/`, "GET");
 };
 
+export const fetchBookOrderDetail = (id: any): Promise<any> => {
+    return apiRequest(`book/get-order-detail/${id}`, "GET");
+};
 export const fetchFailedBook = (): Promise<any> => {
     return apiRequest(`book/get-purchased-books/failed`, "GET");
 };

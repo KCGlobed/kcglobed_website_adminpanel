@@ -16,5 +16,7 @@ export const Columns: ColumnDefinition<BookOrder>[] = [
     { key: 'payment_status', title: 'Status', align: 'center' },
     { key: 'amount', title: 'Amount', align: 'right' },
     { key: 'tax_amount', title: 'Tax', align: 'right' },
-    { key: 'total_amount', title: 'Total', align: 'right' }
+    { key: 'total_amount', title: 'Total', align: 'right' },
+    { key: 'razorpay_order_id', title: 'Razorpay Order ID', align: 'left' },
+    { key: 'razorpay_payment_id', title: 'Razorpay Payment ID', align: 'left' }
 ]
