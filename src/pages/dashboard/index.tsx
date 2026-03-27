@@ -3,7 +3,7 @@ import { useDispatch } from 'react-redux';
 import { Link, useNavigate } from 'react-router-dom';
 import { Outlet } from 'react-router-dom';
 import { logout } from '../../store/slices/authSlice';
-import { FaChevronDown, FaChevronUp, FaSignOutAlt, FaChevronRight, FaChevronLeft } from 'react-icons/fa';
+import { FaChevronDown, FaChevronUp, FaSignOutAlt, FaChevronRight, FaChevronLeft, FaEye } from 'react-icons/fa';
 import logo from '../../assets/logo_kcglobed.svg';
 import smallLogo from '../../assets/smallLogo.png';
 import { menuItems } from './menuItem';
@@ -120,37 +120,7 @@ const Dashboard: React.FC = () => {
         </div>
 
         {/* User dropdown at bottom */}
-        <div className="mt-auto p-4 border-t border-gray-200">
-          <button
-            onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-            className={`flex items-center justify-between w-full p-2 text-gray-700 hover:text-blue-600 rounded hover:bg-gray-100 ${isSidebarCollapsed ? 'justify-center' : ''}`}
-          >
-            <div className="flex items-center justify-center w-full">
-              <div className={`rounded-full bg-gray-300 flex items-center justify-center mr-2 ${isSidebarCollapsed ? 'w-8 h-8' : 'w-8 h-8'}`}>
-                <span className="text-sm font-medium">AD</span>
-              </div>
-              {!isSidebarCollapsed && <span>Admin</span>}
-            </div>
-            {!isSidebarCollapsed && (isDropdownOpen ? (
-              <FaChevronUp className="w-4 h-4" />
-            ) : (
-              <FaChevronDown className="w-4 h-4" />
-            ))}
-          </button>
-
-          {/* Dropdown menu */}
-          {!isSidebarCollapsed && isDropdownOpen && (
-            <div className="mt-2 py-2 bg-white rounded-md shadow-lg">
-              <button
-                onClick={onLogoutClick}
-                className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-              >
-                <FaSignOutAlt className="w-4 h-4 mr-2" />
-                Logout
-              </button>
-            </div>
-          )}
-        </div>
+        <div className="mt-auto p-4 border-t border-gray-200"> <button onClick={onLogoutClick} className="flex items-center justify-center w-full p-2 text-gray-700 hover:text-blue-600 rounded hover:bg-gray-100" > <FaSignOutAlt className="w-4 h-4 mr-2" /> {!isSidebarCollapsed && <span>Logout</span>} </button> </div>
       </aside>
 
       {/* Main content - Scrollable */}

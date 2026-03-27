@@ -12,8 +12,8 @@ if (savedMode === 'production') {
   BASE_URL = PROD_URL;
   Website_URL = DEPLOYED_URL;
 } else {
-  BASE_URL = PROD_URL;
-  Website_URL = DEPLOYED_URL;
+  BASE_URL = DEV_URL;
+  Website_URL = LOCAL_URL;
 }
 
 export const changeMode = (isProd: boolean, reload: boolean = true): void => {

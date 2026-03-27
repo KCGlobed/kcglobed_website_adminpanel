@@ -4,7 +4,6 @@ import type { ColumnDefinition } from "../../../components/Table/Table";
 import type { BookProps } from "../../../utils/types";
 import { getBundleDetail } from "../../../services/book";
 import BundleDetailsModal from "./BundleDetailsModal";
-import { useModal } from "../../../context/ModalContext";
 
 const fetchBundleDetailsDirect = async (id: any) => {
     // Call your API directly, not via Redux
@@ -12,11 +11,15 @@ const fetchBundleDetailsDirect = async (id: any) => {
     return result;
 };
 
+
+
 export const Columns = (
     handleNavigate: (book: BookProps) => void,
     navigate: any,
     handleDeleteBook: any,
-    showModal
+    showModal,
+    setShowDeleteModal,
+    setSelectedId,
 ): ColumnDefinition<BookProps>[] => [
         { key: 'name', title: 'Product Name', align: 'left' },
         { key: 'course_name', title: 'Course', align: 'center' },
@@ -53,7 +56,7 @@ export const Columns = (
             key: 'out_of_stock',
             title: 'Stock Status',
             align: 'center',
-            render: (_, row) => row.out_of_stock === 0 ? <span className="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded-lg">In Stock</span> : <span className="bg-red-100 text-red-800 text-xs font-medium px-2.5 py-0.5 rounded-lg">Out of Stock</span>
+            render: (_, row) => row.out_of_stock === 1 ? <span className="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded-lg">In Stock</span> : <span className="bg-red-100 text-red-800 text-xs font-medium px-2.5 py-0.5 rounded-lg">Out of Stock</span>
         },
         { key: 'publisher', title: 'Publisher', align: 'left' },
         {
@@ -77,7 +80,11 @@ export const Columns = (
                         title="Images"
                     />
                     <GlassButton
-                        onClick={() => handleDeleteBook(row.id)}
+                        onClick={() => {
+                            setSelectedId(row.id)
+                            setShowDeleteModal(true)
+
+                        }}
                         icon={<FiTrash className="text-base" />}
                         color="red"
                         title="Delete"
@@ -86,3 +93,4 @@ export const Columns = (
             )
         }
     ];
+

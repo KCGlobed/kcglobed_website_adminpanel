@@ -19,6 +19,8 @@ const Book: React.FC = () => {
     const dispatch = useDispatch()
     const navigate = useNavigate();
     const [isBundleFilter, setIsBundleFilter] = useState<null | boolean>(null);
+    const [showDeleteModal, setShowDeleteModal] = useState<boolean>(false);
+    const [selectedId, setSelectedId] = useState<string | null>(null)
 
     useEffect(() => {
         dispatch(getAllBooks() as any)
@@ -38,7 +40,7 @@ const Book: React.FC = () => {
         : data.filter((book: any) => book.is_bundle === isBundleFilter);
 
     // Pass handleNavigate to Columns
-    const columns = Columns(handleNavigate, navigate, handleDeleteBook, showModal);
+    const columns = Columns(handleNavigate, navigate, handleDeleteBook, showModal, setShowDeleteModal, setSelectedId);
 
     return (
         <div className='overflow-x-hidden'>
@@ -76,6 +78,50 @@ const Book: React.FC = () => {
                 totalCount={enquiry.length}
                 onPageChange={setCurrentPage}
             />
+
+            {showDeleteModal && (
+                <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-50">
+                    <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
+
+                        <h2 className="text-lg font-semibold mb-4 text-center">
+                            Delete Book?
+                        </h2>
+
+                        <p className="text-sm text-gray-600 text-center mb-6">
+                            This action cannot be undone.
+                        </p>
+
+                        <div className="flex gap-3">
+                            <button
+                                onClick={() => {
+                                    setShowDeleteModal(false)
+                                    setSelectedId(null);
+                                }}
+                                className="w-full py-2 bg-gray-300 rounded hover:bg-gray-400 cursor-pointer"
+                            >
+                                Cancel
+                            </button>
+
+                            <button
+                                onClick={async () => {
+                                    try {
+                                        if (!selectedId) return;
+                                        await handleDeleteBook(selectedId);
+                                        setShowDeleteModal(false);
+                                        setSelectedId(null);
+                                    } catch (err) {
+                                        console.error(err);
+                                    }
+                                }}
+                                className="w-full py-2 bg-red-600 text-white rounded hover:bg-red-700 cursor-pointer"
+                            >
+                                Delete
+                            </button>
+                        </div>
+
+                    </div>
+                </div>
+            )}
         </div>
     )
 }
