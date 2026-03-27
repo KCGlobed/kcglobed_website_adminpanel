@@ -49,8 +49,9 @@ export default function AppRoutes() {
       </Route>
 
       <Route element={<PrivateRoute />}>
-        <Route element={<Dashboard />}>
-          <Route index element={<Home />} />
+        <Route path="/dashboard" element={<Dashboard />}>
+          {/* <Route index element={<Home />} /> */}
+          <Route index element={<Navigate to="books" replace />} />
           <Route path="user" element={<Users />} />
           <Route path="blog" element={<BlogPage />} />
           <Route path="blog/comments" element={<BlogCommentsManagement />} />
