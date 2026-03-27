@@ -49,7 +49,7 @@ export default function AppRoutes() {
       </Route>
 
       <Route element={<PrivateRoute />}>
-        <Route path="/dashboard" element={<Dashboard />}>
+        <Route element={<Dashboard />}>
           <Route index element={<Home />} />
           <Route path="user" element={<Users />} />
           <Route path="blog" element={<BlogPage />} />

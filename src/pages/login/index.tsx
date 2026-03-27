@@ -31,7 +31,7 @@ const Login: React.FC = () => {
     const result = await dispatch(loginUser(loginCred));
     if (loginUser.fulfilled.match(result)) {
       hideLoading();
-      navigate("/dashboard");
+      navigate("/books");
     } else {
       hideLoading();
       alert("Login failed");
