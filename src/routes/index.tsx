@@ -50,7 +50,8 @@ export default function AppRoutes() {
 
       <Route element={<PrivateRoute />}>
         <Route path="/dashboard" element={<Dashboard />}>
-          <Route index element={<Home />} />
+          {/* <Route index element={<Home />} /> */}
+          <Route index element={<Navigate to="books" replace />} />
           <Route path="user" element={<Users />} />
           <Route path="blog" element={<BlogPage />} />
           <Route path="blog/comments" element={<BlogCommentsManagement />} />

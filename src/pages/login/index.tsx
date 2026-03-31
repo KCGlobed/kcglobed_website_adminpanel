@@ -5,10 +5,13 @@ import { loginUser } from '../../store/slices/authSlice';
 import { useLoading } from '../../context/LoadingContext';
 import { changeMode } from '../../utils/constants';
 import { useAppDispatch } from '../../hooks/useRedux';
+import { FaEye } from 'react-icons/fa';
+
 
 const Login:React.FC = () => {
 
   const [loginCred, setLoginCred] = useState<LoginCred>({email : '', password : ''});
+  const [showPassword, setShowPassword] = useState<Boolean>(false)
   const { showLoading, hideLoading } = useLoading();
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
@@ -28,7 +31,7 @@ const Login:React.FC = () => {
     const result = await dispatch(loginUser(loginCred));
     if (loginUser.fulfilled.match(result)) {
       hideLoading();
-      navigate("/dashboard");
+      navigate("/dashboard/books");
     } else {
       hideLoading();
       alert("Login failed");
@@ -60,13 +63,20 @@ const Login:React.FC = () => {
           <label className="block mb-2 text-sm font-medium text-gray-700" htmlFor="password">
             Password
           </label>
-          <input
-            name="password"
-            type="password"
-            onChange={updateCred}
-            placeholder="••••••••"
-            className="w-full p-2 border border-gray-300 rounded mb-6"
-          />
+          <div className="relative mb-6">
+  <input
+    name="password"
+    type={showPassword ? "text" : "password"}
+    onChange={updateCred}
+    placeholder="••••••••"
+    className="w-full p-2 border border-gray-300 rounded pr-10"
+  />
+
+  <FaEye
+    onClick={() => setShowPassword(!showPassword)}
+    className="absolute right-3 top-1/2 transform -translate-y-1/2 cursor-pointer text-gray-500"
+  />
+</div>
           <button
             type="button"
             onClick={onLoggedInClick}
