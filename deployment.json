@@ -1,0 +1,15 @@
+{
+    "project": {
+        "name": "kcg-website-admin",
+        "domain": "admin.kcglobed.com"
+    },
+    "build": {
+        "directory": "dist"
+    },
+    "deploy": {
+        "releases_to_keep": 5
+    },
+    "ssl": {
+        "email": "kcglobed@gmail.com"
+    }
+}

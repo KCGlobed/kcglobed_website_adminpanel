@@ -1,0 +1,95 @@
+name: Deploy KCG Admin Panel Frontend
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Source
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Read Deployment Configuration
+        run: |
+          echo "PROJECT_NAME=$(node -p "require('./deployment.json').project.name")" >> $GITHUB_ENV
+          echo "DOMAIN=$(node -p "require('./deployment.json').project.domain")" >> $GITHUB_ENV
+          echo "BUILD_DIR=$(node -p "require('./deployment.json').build.directory")" >> $GITHUB_ENV
+          echo "KEEP_RELEASES=$(node -p "require('./deployment.json').deploy.releases_to_keep")" >> $GITHUB_ENV
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Build Project
+        run: npm run build
+
+      - name: Generate Release Name
+        run: |
+          echo "RELEASE_NAME=release_$(date +'%Y%m%d_%H%M%S')_${GITHUB_SHA::7}" >> $GITHUB_ENV
+
+      - name: Create Deployment Package
+        run: |
+          tar -czf "${{ env.RELEASE_NAME }}.tar.gz" -C "${{ env.BUILD_DIR }}" .
+
+      - name: Verify Deployment Package
+        run: |
+          echo "Project        : ${{ env.PROJECT_NAME }}"
+          echo "Domain         : ${{ env.DOMAIN }}"
+          echo "Build Directory: ${{ env.BUILD_DIR }}"
+          echo "Keep Releases  : ${{ env.KEEP_RELEASES }}"
+          echo "Release        : ${{ env.RELEASE_NAME }}"
+          ls -lh
+
+      - name: Configure SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.FE_SERVER_SSH_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -H ${{ secrets.FE_SERVER_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Upload Package
+        run: |
+          scp "${{ env.RELEASE_NAME }}.tar.gz" \
+          ${{ secrets.FE_SERVER_USER }}@${{ secrets.FE_SERVER_HOST }}:/var/www/releases/${{ env.PROJECT_NAME }}/
+
+      - name: Create Site
+        run: |
+          ssh ${{ secrets.FE_SERVER_USER }}@${{ secrets.FE_SERVER_HOST }} \
+          "sudo /opt/deploy-platform/scripts/create-site.sh \
+          '${{ env.PROJECT_NAME }}' \
+          '${{ env.DOMAIN }}'"
+
+      - name: Deploy Release
+        run: |
+          ssh ${{ secrets.FE_SERVER_USER }}@${{ secrets.FE_SERVER_HOST }} \
+          "sudo /opt/deploy-platform/scripts/deploy.sh \
+          '${{ env.PROJECT_NAME }}' \
+          '${{ env.RELEASE_NAME }}.tar.gz' \
+          '${{ env.KEEP_RELEASES }}'"
+
+      - name: Configure SSL
+        continue-on-error: true
+        run: |
+          ssh ${{ secrets.FE_SERVER_USER }}@${{ secrets.FE_SERVER_HOST }} \
+          "sudo /opt/deploy-platform/scripts/ssl-site.sh \
+          '${{ env.PROJECT_NAME }}' \
+          '${{ env.DOMAIN }}'"
+
+      - name: Deployment Summary
+        run: |
+          echo "========================================"
+          echo "Deployment Completed Successfully"
+          echo "========================================"
+          echo "Project : ${{ env.PROJECT_NAME }}"
+          echo "Domain  : https://${{ env.DOMAIN }}"
+          echo "Release : ${{ env.RELEASE_NAME }}"
+          echo "========================================"
