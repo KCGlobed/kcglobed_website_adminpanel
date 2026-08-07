@@ -1,15 +1,18 @@
 {
+    "version": 1,
     "project": {
-        "name": "kcg-website-admin",
-        "domain": "admin.kcglobed.com"
+        "name": "kcg-admin",
+        "runtime": "react",
+        "repository": "KCGlobed/kcglobed_website_adminpanel",
+        "branch": "main"
     },
-    "build": {
-        "directory": "dist"
+    "deployment": {
+        "keepReleases": 5
     },
-    "deploy": {
-        "releases_to_keep": 5
-    },
-    "ssl": {
-        "email": "kcglobed@gmail.com"
+    "runtimeConfig": {},
+    "web": {
+        "domain": "admin.kcglobed.com",
+        "ssl": true,
+        "sslEmail": "kcglobed@gmail.com"
     }
 }

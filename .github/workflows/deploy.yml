@@ -1,4 +1,4 @@
-name: Deploy KCG Admin Panel Frontend
+name: Deploy Application
 
 on:
   push:
@@ -6,90 +6,111 @@ on:
       - main
 
 jobs:
+
   deploy:
+
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Source
+
+      ######################################################
+      # Checkout Repository
+      ######################################################
+
+      - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
+      ######################################################
+      # Read Project Configuration
+      ######################################################
+
+      - name: Read deployment.json
+        run: |
+          PROJECT_NAME=$(jq -r '.project.name' deployment.json)
+
+          echo "PROJECT_NAME=$PROJECT_NAME" >> $GITHUB_ENV
+
+      ######################################################
+      # React Build
+      ######################################################
+
+      - name: Setup Node
+        if: hashFiles('package.json') != ''
         uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: npm
-
-      - name: Read Deployment Configuration
-        run: |
-          echo "PROJECT_NAME=$(node -p "require('./deployment.json').project.name")" >> $GITHUB_ENV
-          echo "DOMAIN=$(node -p "require('./deployment.json').project.domain")" >> $GITHUB_ENV
-          echo "BUILD_DIR=$(node -p "require('./deployment.json').build.directory")" >> $GITHUB_ENV
-          echo "KEEP_RELEASES=$(node -p "require('./deployment.json').deploy.releases_to_keep")" >> $GITHUB_ENV
 
       - name: Install Dependencies
+        if: hashFiles('package.json') != ''
         run: npm ci
 
-      - name: Build Project
+      - name: Build React
+        if: hashFiles('package.json') != ''
         run: npm run build
 
-      - name: Generate Release Name
-        run: |
-          echo "RELEASE_NAME=release_$(date +'%Y%m%d_%H%M%S')_${GITHUB_SHA::7}" >> $GITHUB_ENV
+      ######################################################
+      # Package React
+      ######################################################
 
-      - name: Create Deployment Package
+      - name: Package React
+        if: hashFiles('package.json') != ''
         run: |
-          tar -czf "${{ env.RELEASE_NAME }}.tar.gz" -C "${{ env.BUILD_DIR }}" .
+          ARCHIVE="release_$(date +%Y%m%d_%H%M%S).tar.gz"
 
-      - name: Verify Deployment Package
-        run: |
-          echo "Project        : ${{ env.PROJECT_NAME }}"
-          echo "Domain         : ${{ env.DOMAIN }}"
-          echo "Build Directory: ${{ env.BUILD_DIR }}"
-          echo "Keep Releases  : ${{ env.KEEP_RELEASES }}"
-          echo "Release        : ${{ env.RELEASE_NAME }}"
-          ls -lh
+          tar -czf "$ARCHIVE" \
+            -C dist \
+            .
 
-      - name: Configure SSH
-        run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.FE_SERVER_SSH_KEY }}" > ~/.ssh/id_ed25519
-          chmod 600 ~/.ssh/id_ed25519
-          ssh-keyscan -H ${{ secrets.FE_SERVER_HOST }} >> ~/.ssh/known_hosts
+          echo "ARCHIVE=$ARCHIVE" >> $GITHUB_ENV
 
-      - name: Upload Package
-        run: |
-          scp "${{ env.RELEASE_NAME }}.tar.gz" \
-          ${{ secrets.FE_SERVER_USER }}@${{ secrets.FE_SERVER_HOST }}:/var/www/releases/${{ env.PROJECT_NAME }}/
+      ######################################################
+      # Package Static HTML
+      ######################################################
 
-      - name: Create Site
+      - name: Package Static HTML
+        if: hashFiles('package.json') == ''
         run: |
-          ssh ${{ secrets.FE_SERVER_USER }}@${{ secrets.FE_SERVER_HOST }} \
-          "sudo /opt/deploy-platform/scripts/create-site.sh \
-          '${{ env.PROJECT_NAME }}' \
-          '${{ env.DOMAIN }}'"
+          ARCHIVE="release_$(date +%Y%m%d_%H%M%S).tar.gz"
 
-      - name: Deploy Release
-        run: |
-          ssh ${{ secrets.FE_SERVER_USER }}@${{ secrets.FE_SERVER_HOST }} \
-          "sudo /opt/deploy-platform/scripts/deploy.sh \
-          '${{ env.PROJECT_NAME }}' \
-          '${{ env.RELEASE_NAME }}.tar.gz' \
-          '${{ env.KEEP_RELEASES }}'"
+          TEMP_DIR=$(mktemp -d)
 
-      - name: Configure SSL
-        continue-on-error: true
-        run: |
-          ssh ${{ secrets.FE_SERVER_USER }}@${{ secrets.FE_SERVER_HOST }} \
-          "sudo /opt/deploy-platform/scripts/ssl-site.sh \
-          '${{ env.PROJECT_NAME }}' \
-          '${{ env.DOMAIN }}'"
+          rsync -a \
+            --exclude=".git" \
+            --exclude=".github" \
+            ./ "$TEMP_DIR/"
 
-      - name: Deployment Summary
-        run: |
-          echo "========================================"
-          echo "Deployment Completed Successfully"
-          echo "========================================"
-          echo "Project : ${{ env.PROJECT_NAME }}"
-          echo "Domain  : https://${{ env.DOMAIN }}"
-          echo "Release : ${{ env.RELEASE_NAME }}"
-          echo "========================================"
+          tar -czf "$ARCHIVE" \
+            -C "$TEMP_DIR" \
+            .
+
+          rm -rf "$TEMP_DIR"
+
+          echo "ARCHIVE=$ARCHIVE" >> $GITHUB_ENV
+
+      ######################################################
+      # Upload Package
+      ######################################################
+
+      - name: Copy Package
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          source: "${{ env.ARCHIVE }}"
+          target: "/var/www/apps/${{ env.PROJECT_NAME }}/releases"
+
+      ######################################################
+      # Deploy
+      ######################################################
+
+      - name: Deploy
+        uses: appleboy/ssh-action@v1.2.2
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          script: |
+            /opt/deploy-platform/scripts/deploy.sh \
+              "${{ env.PROJECT_NAME }}" \
+              "${{ env.ARCHIVE }}"
