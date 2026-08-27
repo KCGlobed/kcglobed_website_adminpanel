@@ -2,9 +2,9 @@
 
 let BASE_URL: string;
 let Website_URL: string;
-const DEV_URL = 'https://backend-dev-254015706580.asia-south2.run.app/api/';
-const PROD_URL = 'https://backend-prod-254015706580.asia-south2.run.app/api/';
-const LOCAL_URL = 'https://kcglobed-website-427233911753.europe-west1.run.app';
+const DEV_URL = 'https://kcg-backend.kcglobed.com/api/';
+const PROD_URL = 'https://kcg-backend.kcglobed.com/api/';
+const LOCAL_URL = 'https://web.kcglobed.com';
 const DEPLOYED_URL = 'https://kcglobed.com';
 
 const savedMode = localStorage.getItem('app_mode');
