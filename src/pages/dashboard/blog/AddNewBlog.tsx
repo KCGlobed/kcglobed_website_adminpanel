@@ -83,7 +83,7 @@ const AddNewBlog: React.FC = () => {
       formData.append('canonical_url', data.canonicalurl);
       formData.append('schema_markup', data.schema_markup);
 
-      const validCards = data.blog_card.filter(
+      const validCards = data.blog_card?.filter(
         (card) =>
           card.title.trim() !== '' ||
           card.buttonText.trim() !== '' ||

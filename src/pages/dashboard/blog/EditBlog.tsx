@@ -92,7 +92,7 @@ const AddNewBlog: React.FC = () => {
             formData.append('img_alt_tag', data.altTag);
             formData.append('slug', data.slug);
             formData.append('canonical_url', data.canonicalurl);
-            const validCards = data.blog_card.filter(
+            const validCards = data.blog_card?.filter(
                 (card) =>
                     card.title.trim() !== '' ||
                     card.buttonText.trim() !== '' ||
