@@ -1,6 +1,6 @@
 
 import React, { useEffect, useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, useFieldArray } from 'react-hook-form';
 import LexicalEditor from '../../../components/TextEditor';
 import { getBlogsCourseCategory } from '../../../store/slices/blogSlice';
 import { useAppDispatch, useAppSelector } from '../../../hooks/useRedux';
@@ -21,6 +21,11 @@ type BlogForm = {
     image: FileList;
     canonicalurl: string
     schema_markup?: string;
+    blog_card: {
+        title: string;
+        buttonText: string;
+        description: string;
+    }[];
 };
 
 const AddNewBlog: React.FC = () => {
@@ -30,9 +35,28 @@ const AddNewBlog: React.FC = () => {
         formState: { errors },
         reset,
         watch,
-    } = useForm<BlogForm>();
+        control
+    } = useForm<BlogForm>({
+        defaultValues: {
+            blog_card: [
+                {
+                    title: '',
+                    buttonText: '',
+                    description: '',
+                },
+                {
+                    title: '',
+                    buttonText: '',
+                    description: '',
+                },
+            ],
+        },
+    });
     const { category } = useAppSelector((state) => state.blog);
-
+    const { fields, append, remove } = useFieldArray({
+        control,
+        name: 'blog_card',
+    });
     const [imagePreview, setImagePreview] = useState<string | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [tags, setTags] = useState<string[]>([]);
@@ -68,6 +92,14 @@ const AddNewBlog: React.FC = () => {
             formData.append('img_alt_tag', data.altTag);
             formData.append('slug', data.slug);
             formData.append('canonical_url', data.canonicalurl);
+            const validCards = data.blog_card.filter(
+                (card) =>
+                    card.title.trim() !== '' ||
+                    card.buttonText.trim() !== '' ||
+                    card.description.trim() !== ''
+            );
+
+            formData.append('blog_card', JSON.stringify(validCards));
             if (id) {
                 await updateBlog(id, formData);
                 // toast.success("Blog updated successfully");
@@ -374,6 +406,111 @@ const AddNewBlog: React.FC = () => {
                             placeholder="Enter sub-question..."
                         />
                     }
+                </div>
+
+                <div className="p-4 bg-gray-50 rounded-lg">
+                    <h3 className="text-lg font-medium text-gray-700 mb-4">
+                        CTA Cards
+                    </h3>
+
+                    <div className="space-y-6">
+                        {fields.map((field, index) => (
+                            <div
+                                key={field.id}
+                                className="border border-gray-300 rounded-lg p-4 bg-white"
+                            >
+                                <div className="flex justify-between items-center mb-4">
+                                    <h4 className="font-medium text-gray-700">
+                                        CTA Card {index + 1}
+                                    </h4>
+
+                                    {fields.length > 2 && (
+                                        <button
+                                            type="button"
+                                            onClick={() => remove(index)}
+                                            className="text-red-600 text-sm hover:text-red-800 bg-red-50 px-3 py-1 rounded-md"
+                                        >
+                                            Remove
+                                        </button>
+                                    )}
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                                            CTA Title *
+                                        </label>
+
+                                        <input
+                                            type="text"
+                                            {...register(`blog_card.${index}.title`)}
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                                            placeholder="Enter CTA title"
+                                        />
+
+                                        {errors.blog_card?.[index]?.title && (
+                                            <p className="mt-1 text-sm text-red-600">
+                                                {errors.blog_card[index]?.title?.message}
+                                            </p>
+                                        )}
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                                            Button Text *
+                                        </label>
+
+                                        <input
+                                            type="text"
+                                            {...register(`blog_card.${index}.buttonText`)}
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                                            placeholder="Enter button text"
+                                        />
+
+                                        {errors.blog_card?.[index]?.buttonText && (
+                                            <p className="mt-1 text-sm text-red-600">
+                                                {errors.blog_card[index]?.buttonText?.message}
+                                            </p>
+                                        )}
+                                    </div>
+
+                                    <div className="md:col-span-2">
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                                            Description *
+                                        </label>
+
+                                        <textarea
+                                            {...register(`blog_card.${index}.description`)}
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-md h-24"
+                                            placeholder="Enter CTA description"
+                                        />
+
+                                        {errors.blog_card?.[index]?.description && (
+                                            <p className="mt-1 text-sm text-red-600">
+                                                {errors.blog_card[index]?.description?.message}
+                                            </p>
+                                        )}
+                                    </div>
+
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+
+                    <button
+                        type="button"
+                        onClick={() =>
+                            append({
+                                title: '',
+                                buttonText: '',
+                                description: '',
+                            })
+                        }
+                        className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                    >
+                        + Add More Card
+                    </button>
                 </div>
 
                 <div className="flex justify-end pt-4 border-t">
