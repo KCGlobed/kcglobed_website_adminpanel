@@ -53,7 +53,7 @@ const AddNewBlog: React.FC = () => {
         },
     });
     const { category } = useAppSelector((state) => state.blog);
-    const { fields, append, remove } = useFieldArray({
+    const { fields, append, remove, replace } = useFieldArray({
         control,
         name: 'blog_card',
     });
@@ -164,6 +164,22 @@ const AddNewBlog: React.FC = () => {
                     canonicalurl: blog.canonical_url || '',
                     schema_markup: blog.schema_markup || '',
                 });
+                if (blog.blog_card && blog.blog_card.length > 0) {
+                    replace(blog.blog_card);
+                } else {
+                    replace([
+                        {
+                            title: '',
+                            buttonText: '',
+                            description: '',
+                        },
+                        {
+                            title: '',
+                            buttonText: '',
+                            description: '',
+                        },
+                    ]);
+                }
                 setTags(blog.tags || []);
                 setContant(blog.description);
                 setImagePreview(blog.image || null);
