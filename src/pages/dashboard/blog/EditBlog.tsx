@@ -32,11 +32,13 @@ const AddNewBlog: React.FC = () => {
     const {
         register,
         handleSubmit,
-        formState: { errors },
+        formState: { errors, isValid },
         reset,
         watch,
-        control
+        control,
+        trigger
     } = useForm<BlogForm>({
+        mode: 'onChange',
         defaultValues: {
             blog_card: [
                 {
@@ -90,7 +92,7 @@ const AddNewBlog: React.FC = () => {
             formData.append('meta_description', data.metaDescription);
             formData.append('meta_keys', data.primaryKeyword);
             formData.append('img_alt_tag', data.altTag);
-            formData.append('slug', data.slug);
+            formData.append('slug', data.slug.trim());
             formData.append('canonical_url', data.canonicalurl);
             const validCards = data.blog_card?.filter(
                 (card) =>
@@ -108,7 +110,8 @@ const AddNewBlog: React.FC = () => {
             }
         } catch (error) {
             console.error('Error submitting blog:', error);
-            showAlert("Something went wrong while updating the blog", "error");
+            const message = error instanceof Error ? error.message : '';
+            showAlert(message || "Something went wrong while updating the blog", "error");
         } finally {
             setIsSubmitting(false);
         }
@@ -138,6 +141,11 @@ const AddNewBlog: React.FC = () => {
             return () => URL.revokeObjectURL(url);
         }
     }, [imageFile]);
+
+    // The image rule depends on imagePreview, so re-run it whenever that changes
+    useEffect(() => {
+        trigger('image');
+    }, [imagePreview, trigger]);
 
     useEffect(() => {
         dispatch(getBlogsCourseCategory())
@@ -191,6 +199,16 @@ const AddNewBlog: React.FC = () => {
         if (id) fetchBlog();
     }, [id, reset]);
 
+
+    const isPublishDisabled = isSubmitting || !isValid;
+
+    // A disabled button never fires a click, so the wrapper catches it and
+    // runs validation to reveal which required fields are still empty
+    const handleDisabledPublishClick = () => {
+        if (!isValid && !isSubmitting) {
+            trigger();
+        }
+    };
 
     return (
         <div className="max-w-8xl mx-auto p-6 bg-white rounded-lg shadow-sm border border-gray-100">
@@ -279,13 +297,21 @@ const AddNewBlog: React.FC = () => {
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Slug</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Slug *</label>
                         <input
                             type="text"
-                            {...register('slug')}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            {...register('slug', {
+                                required: 'Slug is required',
+                                pattern: {
+                                    value: /^[a-z0-9]+(?:-[a-z0-9]+)*$/,
+                                    message: 'Use lowercase letters, numbers and hyphens only',
+                                },
+                            })}
+                            className={`w-full px-3 py-2 border ${errors.slug ? 'border-red-300' : 'border-gray-300'} rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500`}
                             placeholder="example-blog-title"
                         />
+                        {errors.slug && <p className="mt-1 text-sm text-red-600">{errors.slug.message}</p>}
+                        <p className="mt-1 text-xs text-gray-500">Must be unique across all blogs</p>
                     </div>
 
                     <div>
@@ -530,10 +556,14 @@ const AddNewBlog: React.FC = () => {
                 </div>
 
                 <div className="flex justify-end pt-4 border-t">
+                    <div
+                        onClick={handleDisabledPublishClick}
+                        className={isPublishDisabled ? 'cursor-not-allowed' : ''}
+                    >
                     <button
                         type="submit"
-                        disabled={isSubmitting}
-                        className={`inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 ${isSubmitting ? 'opacity-75 cursor-not-allowed' : ''}`}
+                        disabled={isPublishDisabled}
+                        className={`inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 ${isPublishDisabled ? 'opacity-75 cursor-not-allowed pointer-events-none' : ''}`}
                     >
                         {isSubmitting ? (
                             <>
@@ -552,6 +582,7 @@ const AddNewBlog: React.FC = () => {
                             </>
                         )}
                     </button>
+                    </div>
                 </div>
             </form>
         </div>
