@@ -1,9 +1,19 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useForm, useFieldArray } from 'react-hook-form';
 import LexicalEditor from '../../../components/TextEditor';
 import { addBlogs, getBlogsCourseCategory } from '../../../store/slices/blogSlice';
 import { useAppDispatch, useAppSelector } from '../../../hooks/useRedux';
 import { useNavigate } from 'react-router-dom';
+import { useAlert } from '../../../context/AlertContext';
+
+// Build a URL safe slug out of the blog title
+const slugify = (value: string) =>
+  value
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9\s-]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-');
 
 type BlogForm = {
   title: string;
@@ -29,10 +39,13 @@ const AddNewBlog: React.FC = () => {
   const {
     register,
     handleSubmit,
-    formState: { errors },
+    formState: { errors, isValid },
     watch,
-    control
+    control,
+    setValue,
+    trigger
   } = useForm<BlogForm>({
+    mode: 'onChange',
     defaultValues: {
       blog_card: [
         {
@@ -59,9 +72,20 @@ const AddNewBlog: React.FC = () => {
   const [contant, setContant] = useState<any>("")
   const [tagInput, setTagInput] = useState('');
   const navigate = useNavigate();
+  const { showAlert } = useAlert();
+  // Once the slug is typed by hand we stop deriving it from the title
+  const slugEditedRef = useRef(false);
 
   const dispatch = useAppDispatch();
   const imageFile = watch('image');
+  const titleValue = watch('title');
+  const slugField = register('slug', {
+    required: 'Slug is required',
+    pattern: {
+      value: /^[a-z0-9]+(?:-[a-z0-9]+)*$/,
+      message: 'Use lowercase letters, numbers and hyphens only',
+    },
+  });
 
   const onSubmit = async (data: BlogForm) => {
     setIsSubmitting(true);
@@ -71,7 +95,7 @@ const AddNewBlog: React.FC = () => {
       formData.append('title', data.title);
       formData.append('description', contant);
       formData.append('image', data.image[0]);
-      formData.append('created_by', data.title);
+      formData.append('created_by', data.createdBy);
       formData.append('category_id', data.category);
       formData.append('tags', tag);
       formData.append('live_date', data.date);
@@ -79,9 +103,9 @@ const AddNewBlog: React.FC = () => {
       formData.append('meta_description', data.metaDescription);
       formData.append('meta_keys', data.primaryKeyword);
       formData.append('img_alt_tag', data.altTag);
-      formData.append('slug', data.slug);
-      formData.append('canonical_url', data.canonicalurl);
-      formData.append('schema_markup', data.schema_markup);
+      formData.append('slug', data.slug.trim());
+      formData.append('canonical_url', data.canonicalurl || '');
+      formData.append('schema_markup', data.schema_markup || '');
 
       const validCards = data.blog_card?.filter(
         (card) =>
@@ -91,10 +115,21 @@ const AddNewBlog: React.FC = () => {
       );
 
       formData.append('blog_card', JSON.stringify(validCards));
-      await dispatch(addBlogs(formData))
+
+      // The thunk swallows failures with rejectWithValue, so inspect the
+      // resulting action instead of relying on a thrown error
+      const result = await dispatch(addBlogs(formData));
+      if (addBlogs.rejected.match(result)) {
+        showAlert(result.payload || 'Failed to create blog', 'error');
+        return;
+      }
+
+      showAlert('Blog created successfully', 'success');
       navigate("/dashboard/blog")
     } catch (error) {
       console.error('Error submitting blog:', error);
+      const message = error instanceof Error ? error.message : '';
+      showAlert(message || 'Something went wrong while creating the blog', 'error');
     } finally {
       setIsSubmitting(false);
     }
@@ -126,9 +161,26 @@ const AddNewBlog: React.FC = () => {
   }, [imageFile]);
 
   useEffect(() => {
+    if (slugEditedRef.current) return;
+    const nextSlug = slugify(titleValue || '');
+    if (!nextSlug) return;
+    setValue('slug', nextSlug, { shouldValidate: true });
+  }, [titleValue, setValue]);
+
+  useEffect(() => {
     dispatch(getBlogsCourseCategory())
   }, [dispatch])
 
+
+  const isPublishDisabled = isSubmitting || !isValid;
+
+  // A disabled button never fires a click, so the wrapper catches it and
+  // runs validation to reveal which required fields are still empty
+  const handleDisabledPublishClick = () => {
+    if (!isValid && !isSubmitting) {
+      trigger();
+    }
+  };
 
   return (
     <div className="max-w-8xl mx-auto p-6 bg-white rounded-lg shadow-sm border border-gray-100">
@@ -217,13 +269,19 @@ const AddNewBlog: React.FC = () => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Slug</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Slug *</label>
             <input
               type="text"
-              {...register('slug')}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              {...slugField}
+              onChange={(e) => {
+                slugEditedRef.current = true;
+                slugField.onChange(e);
+              }}
+              className={`w-full px-3 py-2 border ${errors.slug ? 'border-red-300' : 'border-gray-300'} rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500`}
               placeholder="example-blog-title"
             />
+            {errors.slug && <p className="mt-1 text-sm text-red-600">{errors.slug.message}</p>}
+            <p className="mt-1 text-xs text-gray-500">Must be unique across all blogs</p>
           </div>
 
           <div>
@@ -461,10 +519,14 @@ const AddNewBlog: React.FC = () => {
         </div>
 
         <div className="flex justify-end pt-4 border-t">
+          <div
+            onClick={handleDisabledPublishClick}
+            className={isPublishDisabled ? 'cursor-not-allowed' : ''}
+          >
           <button
             type="submit"
-            disabled={isSubmitting}
-            className={`inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 ${isSubmitting ? 'opacity-75 cursor-not-allowed' : ''}`}
+            disabled={isPublishDisabled}
+            className={`inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 ${isPublishDisabled ? 'opacity-75 cursor-not-allowed pointer-events-none' : ''}`}
           >
             {isSubmitting ? (
               <>
@@ -483,6 +545,7 @@ const AddNewBlog: React.FC = () => {
               </>
             )}
           </button>
+          </div>
         </div>
       </form>
     </div>
