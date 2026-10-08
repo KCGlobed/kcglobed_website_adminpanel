@@ -15,6 +15,15 @@ const slugify = (value: string) =>
     .replace(/\s+/g, '-')
     .replace(/-+/g, '-');
 
+const MAX_SCHEMA_BLOCKS = 4;
+
+// The API keeps every schema block in a single comma separated string
+const joinSchemaMarkup = (blocks: { value: string }[] = []) =>
+  blocks
+    .map((block) => block.value.trim())
+    .filter(Boolean)
+    .join(',');
+
 type BlogForm = {
   title: string;
   createdBy: string;
@@ -27,7 +36,7 @@ type BlogForm = {
   metaDescription: string;
   image: FileList;
   canonicalurl?: string;
-  schema_markup?: string;
+  schema_markup: { value: string }[];
   blog_card: {
     title: string;
     buttonText: string;
@@ -47,6 +56,7 @@ const AddNewBlog: React.FC = () => {
   } = useForm<BlogForm>({
     mode: 'onChange',
     defaultValues: {
+      schema_markup: [{ value: '' }],
       blog_card: [
         {
           title: '',
@@ -65,6 +75,14 @@ const AddNewBlog: React.FC = () => {
   const { fields, append, remove } = useFieldArray({
     control,
     name: 'blog_card',
+  });
+  const {
+    fields: schemaFields,
+    append: appendSchema,
+    remove: removeSchema,
+  } = useFieldArray({
+    control,
+    name: 'schema_markup',
   });
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -105,7 +123,7 @@ const AddNewBlog: React.FC = () => {
       formData.append('img_alt_tag', data.altTag);
       formData.append('slug', data.slug.trim());
       formData.append('canonical_url', data.canonicalurl || '');
-      formData.append('schema_markup', data.schema_markup || '');
+      formData.append('schema_markup', joinSchemaMarkup(data.schema_markup));
 
       const validCards = data.blog_card?.filter(
         (card) =>
@@ -302,14 +320,41 @@ const AddNewBlog: React.FC = () => {
               placeholder="Main SEO keyword"
             />
           </div>
-          <div>
+          <div className="md:col-span-2">
             <label className="block text-sm font-medium text-gray-700 mb-1">Schema Markup</label>
-            <textarea
-              rows={3}
-              {...register('schema_markup')}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              placeholder="Schema markup for structured data"
-            />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {schemaFields.map((field, index) => (
+                <div key={field.id}>
+                  <textarea
+                    rows={3}
+                    {...register(`schema_markup.${index}.value`)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="Schema markup for structured data"
+                  />
+                  {schemaFields.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => removeSchema(index)}
+                      className="mt-1 text-red-600 text-sm hover:text-red-800 bg-red-50 px-3 py-1 rounded-md"
+                    >
+                      Remove
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
+            {schemaFields.length < MAX_SCHEMA_BLOCKS && (
+              <button
+                type="button"
+                onClick={() => appendSchema({ value: '' })}
+                className="mt-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm"
+              >
+                + Add Schema Markup
+              </button>
+            )}
+            <p className="mt-1 text-xs text-gray-500">
+              Optional. Up to {MAX_SCHEMA_BLOCKS} blocks, empty ones are skipped
+            </p>
           </div>
 
           <div className="md:col-span-2">
