@@ -53,6 +53,11 @@ export const menuItems = [
     path: '/dashboard/placement-support',
   },
   {
+    name: 'Brochure Users',
+    icon: <FaUsers className="mr-2" />,
+    path: '/dashboard/brochure-list',
+  },
+  {
     name: 'Books Reports',
     icon: <FaBook className="mr-2" />,
     submenu: [

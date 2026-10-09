@@ -39,6 +39,7 @@ import AuthorForm from "../pages/dashboard/Book/AuthorForm";
 import Sales from "../pages/dashboard/sales/Sale";
 import InCompleteSale from "../pages/dashboard/sales/InCompleteSale";
 import SeoPagesTable from "../pages/dashboard/dynamic-pages/SeoPage";
+import DownlaodBrochure from "../pages/dashboard/Brochure_list/BrochureList";
 
 export default function AppRoutes() {
   return (
@@ -87,6 +88,7 @@ export default function AppRoutes() {
           <Route path="incomplete-sales" element={<InCompleteSale />} />
           <Route path="testimonial/add" element={<AddTestimonial />} />
           <Route path="testimonial/update/:id" element={<UpdateTestimonial />} />
+          <Route path="brochure-list" element={<DownlaodBrochure />} />
         </Route>
       </Route>
       <Route path="/" element={<Navigate to="/login" />} />

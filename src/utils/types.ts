@@ -134,6 +134,19 @@ export interface Enquiry {
   message: string;
   created_at: string; // You can use `Date` if it's parsed
 }
+
+export interface BrochureUsers {
+  id: number;
+  first_name: string;
+  last_name: string;
+  email: string;
+  phone: string;
+  county: string;
+  state: string;
+  city: string;
+  created_at: string;
+}
+
 type type = string
 export interface Payload {
   start_date: string,

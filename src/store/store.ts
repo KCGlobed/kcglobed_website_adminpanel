@@ -17,6 +17,7 @@ import bookReducer from './slices/bookSlice'
 import testimonialReducer from './slices/testimonialSlice'
 import courseReducer from './slices/courseSlice'
 import salesReducer from './slices/salesSlice'
+import brochureReducer from './slices/brochureSlice'
 export const store = configureStore({
   reducer: {
     auth: authReducer,
@@ -36,6 +37,7 @@ export const store = configureStore({
     books: bookReducer,
     testimonial: testimonialReducer,
     sales: salesReducer,
+    brochure: brochureReducer,
   },
 });
 
