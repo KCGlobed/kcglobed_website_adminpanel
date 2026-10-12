@@ -32,6 +32,7 @@ interface Book {
     usa_total_price: number;
     visible: number;
     out_of_stock: number;
+    usa_out_of_stock: number;
     created_at?: string;
     description?: string
 }
@@ -85,6 +86,7 @@ const BookForm: React.FC<BookFormProps> = () => {
         usa_total_price: undefined,
         visible: 1,
         out_of_stock: undefined,
+        usa_out_of_stock: undefined,
         description: "",
         is_bundle: false,
     });
@@ -299,6 +301,18 @@ const BookForm: React.FC<BookFormProps> = () => {
                             <select
                                 name="out_of_stock"
                                 value={formData.out_of_stock}
+                                onChange={handleChange}
+                                className="w-full px-4 py-2 border border-gray-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            >
+                                <option value={0}>In Stock</option>
+                                <option value={1}>Out of Stock</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">US Stock Status</label>
+                            <select
+                                name="usa_out_of_stock"
+                                value={formData.usa_out_of_stock ?? 0}
                                 onChange={handleChange}
                                 className="w-full px-4 py-2 border border-gray-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                             >
