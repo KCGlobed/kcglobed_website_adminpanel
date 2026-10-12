@@ -324,6 +324,7 @@ export interface BookProps {
   discount_percentage: number;
   total_price: number;
   out_of_stock: number;
+  usa_out_of_stock?: number;
   publisher: string;
   actions?: any
   is_bundle?: boolean
