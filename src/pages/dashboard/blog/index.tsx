@@ -1,19 +1,22 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useAppDispatch, useAppSelector } from '../../../hooks/useRedux';
 import { getBlogs, removeBlog, type Blog } from '../../../store/slices/blogSlice';
 import moment from 'moment';
 import { useNavigate } from 'react-router-dom';
 import { useAlert } from '../../../context/AlertContext';
-import { deleteBlog } from '../../../services/blogService';
+import { changeBlogStatus, deleteBlog } from '../../../services/blogService';
 import { useModal } from '../../../context/ModalContext';
 import DynamicServerTable, { type ColumnDefinition } from '../../../components/Table/Table';
 import GlassButton from '../../../components/Button/Button';
 import { FiEdit, FiEye, FiTrash } from 'react-icons/fi';
+import Toggle from '../../../components/Toggle';
 
 const BlogPage: React.FC = () => {
     const { data, loading } = useAppSelector((state) => state.blog);
     const { showConfirm, showAlert } = useAlert();
     const [currentPage, setCurrentPage] = useState(1);
+    const [statusById, setStatusById] = useState<Record<number, boolean>>({});
+    const pendingStatusRef = useRef<Set<number>>(new Set());
     const { showModal } = useModal();
 
     const dispatch = useAppDispatch();
@@ -52,6 +55,34 @@ const BlogPage: React.FC = () => {
     const handleEditBlog = (blogId: number) => {
         nevigate(`/dashboard/edit-blog/${blogId}`);
     }
+
+    // is_active defaults to true on the API, so treat a missing flag as active
+    const isBlogActive = (row: Blog): boolean => {
+        if (row.id in statusById) return statusById[row.id];
+        return row.is_active !== false;
+    }
+
+    const handleToggleStatus = async (blogId: number, nextStatus: boolean) => {
+        if (pendingStatusRef.current.has(blogId)) return;
+        pendingStatusRef.current.add(blogId);
+
+        // Move the switch straight away, then confirm with the server
+        setStatusById((prev) => ({ ...prev, [blogId]: nextStatus }));
+        try {
+            const response = await changeBlogStatus(blogId, nextStatus) as { message?: string } | null;
+            showAlert(
+                response?.message || (nextStatus ? "Blog Activated Successfully" : "Blog Deactivated Successfully"),
+                "success"
+            );
+        } catch (error) {
+            // Put the switch back where it was when the call failed
+            setStatusById((prev) => ({ ...prev, [blogId]: !nextStatus }));
+            const message = error instanceof Error ? error.message : '';
+            showAlert(message || "Could not update blog status", "error");
+        } finally {
+            pendingStatusRef.current.delete(blogId);
+        }
+    }
     useEffect(() => {
         dispatch(getBlogs());
     }, [dispatch]);
@@ -81,6 +112,23 @@ const BlogPage: React.FC = () => {
             render: (value: any) => <span className="px-2 py-0.5 bg-gray-100 rounded-md text-xs">{value?.title}</span>
         },
         {
+            key: 'is_active',
+            title: 'Status',
+            align: 'center',
+            render: (_, row) => {
+                const active = isBlogActive(row);
+                return (
+                    <div
+                        className="flex items-center justify-center cursor-pointer"
+                        onClick={() => handleToggleStatus(row.id, !active)}
+                        title={active ? 'Active' : 'Inactive'}
+                    >
+                        <Toggle enabled={active ? 1 : 0} label="" />
+                    </div>
+                );
+            }
+        },
+        {
             key: 'actions',
             title: 'Actions',
             align: 'left',
@@ -108,7 +156,7 @@ const BlogPage: React.FC = () => {
             )
         }
 
-    ], []);
+    ], [statusById]);
 
 
 

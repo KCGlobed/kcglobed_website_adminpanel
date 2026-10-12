@@ -24,6 +24,7 @@ interface Book {
     discount_type: string | null;
     publisher: string;
     isbn: string | null;
+    amazon_url: string;
     gst_percentage: number;
     total_price: number;
     usa_original_price: number;
@@ -39,6 +40,17 @@ interface BookFormProps {
     initialData?: Book; // for update
     onSubmit?: (data: FormData) => void;
 }
+
+// The API validates these now, so only send the ones the admin actually filled in
+const PRICE_FIELDS = new Set([
+    "original_price",
+    "discount_percentage",
+    "total_price",
+    "usa_original_price",
+    "usa_discount_percentage",
+    "usa_total_price",
+    "gst_percentage",
+]);
 
 const BookForm: React.FC<BookFormProps> = () => {
     const { loading, authors, data } = useAppSelector(state => state.books)
@@ -65,6 +77,7 @@ const BookForm: React.FC<BookFormProps> = () => {
         discount_type: null,
         publisher: "",
         isbn: null,
+        amazon_url: "",
         gst_percentage: undefined,
         total_price: undefined,
         usa_original_price: undefined,
@@ -144,12 +157,14 @@ const BookForm: React.FC<BookFormProps> = () => {
 
         const data: any = new FormData();
         Object.entries(formData).forEach(([key, value]) => {
-            if (value !== null) {
-                if (key === "is_bundle") {
-                    data.append(key, value ? "true" : "false");
-                } else {
-                    data.append(key, value instanceof File ? value : String(value));
-                }
+            // Skipping these keeps the literal "undefined" out of the payload
+            if (value === null || value === undefined) return;
+            if (PRICE_FIELDS.has(key) && value === "") return;
+
+            if (key === "is_bundle") {
+                data.append(key, value ? "true" : "false");
+            } else {
+                data.append(key, value instanceof File ? value : String(value));
             }
         });
         if (previewImage) {
@@ -556,6 +571,16 @@ const BookForm: React.FC<BookFormProps> = () => {
                                 value={formData.isbn || ""}
                                 onChange={handleChange}
                                 placeholder="ISBN Number"
+                                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Amazon URL</label>
+                            <input
+                                name="amazon_url"
+                                value={formData.amazon_url || ""}
+                                onChange={handleChange}
+                                placeholder="https://www.amazon.in/..."
                                 className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                             />
                         </div>

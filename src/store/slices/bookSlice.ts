@@ -66,7 +66,7 @@ export const uploadNewBook = createAsyncThunk<BookProps, void, { rejectValue: st
     }
 );
 
-export const updateExistingBook = createAsyncThunk<BookProps, void, { rejectValue: string }>(
+export const updateExistingBook = createAsyncThunk<BookProps, { data: FormData; id: number }, { rejectValue: string }>(
     "Book/update",
     async (payload, { rejectWithValue }) => {
         try {
