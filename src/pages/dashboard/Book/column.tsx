@@ -5,9 +5,9 @@ import type { BookProps } from "../../../utils/types";
 import { getBundleDetail } from "../../../services/book";
 import BundleDetailsModal from "./BundleDetailsModal";
 
-// 0 means in stock and 1 means out of stock
+// 1 means in stock and 0 means out of stock
 const StockBadge = ({ value }: { value?: number }) =>
-    Number(value) === 1
+    Number(value) === 0
         ? <span className="bg-red-100 text-red-800 text-xs font-medium px-2.5 py-0.5 rounded-lg">Out of Stock</span>
         : <span className="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded-lg">In Stock</span>;
 
