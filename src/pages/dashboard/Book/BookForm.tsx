@@ -37,7 +37,7 @@ interface Book {
 
 interface BookFormProps {
     initialData?: Book; // for update
-    onSubmit: (data: FormData) => void;
+    onSubmit?: (data: FormData) => void;
 }
 
 const BookForm: React.FC<BookFormProps> = () => {

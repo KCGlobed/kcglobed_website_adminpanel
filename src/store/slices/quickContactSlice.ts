@@ -1,8 +1,6 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
-import type { Enquiry, ExportBodyType, QuickContact } from "../../utils/types";
+import type { ExportBodyType, QuickContact } from "../../utils/types";
 import { fetchQuickContactSlice, fetchQuickContactSliceForExport } from "../../services/quickContact";
-
-
 
 export interface QuickContactState {
     data: QuickContact[];
@@ -11,7 +9,7 @@ export interface QuickContactState {
     error: string | null;
     previous: string | null;
     next: string | null;
-    exportData?: Enquiry[];
+    exportData?: unknown;
 }
 
 const initialState: QuickContactState = {
@@ -24,35 +22,71 @@ const initialState: QuickContactState = {
     exportData: [],
 };
 
-export const getQuickContactSlice = createAsyncThunk<Enquiry, void, { rejectValue: string }>(
-    "enqury/getQuickContactSlice",
-    async (_, { rejectWithValue }) => {
-        try {
-            const data = await fetchQuickContactSlice();
-            return data;
+type QuickContactResponse = {
+    results?: QuickContact[];
+    data?: QuickContact[];
+    count?: number;
+    totalCount?: number;
+    previous?: string | null;
+    next?: string | null;
+};
 
-        } catch (error: any) {
-            return rejectWithValue(error.message || "Failed to fetch blogs");
+const readRows = (payload: unknown): QuickContact[] => {
+    if (Array.isArray(payload)) return payload as QuickContact[];
+
+    const envelope = payload as QuickContactResponse | null;
+    if (Array.isArray(envelope?.results)) return envelope.results;
+    if (Array.isArray(envelope?.data)) return envelope.data;
+
+    return [];
+};
+
+export const getQuickContactSlice = createAsyncThunk<
+    unknown,
+    { source?: string; page?: number } | string | number | void,
+    { rejectValue: string }
+>(
+    "enqury/getQuickContactSlice",
+    async (arg, { rejectWithValue }) => {
+        try {
+            let source: string | undefined;
+            let page: number | undefined;
+
+            if (typeof arg === "string") {
+                source = arg;
+            } else if (typeof arg === "number") {
+                page = arg;
+            } else if (arg && typeof arg === "object") {
+                source = arg.source;
+                page = arg.page;
+            }
+
+            const data = await fetchQuickContactSlice(source, page);
+            return data;
+        } catch (error: unknown) {
+            const message = error instanceof Error ? error.message : "";
+            return rejectWithValue(message || "Failed to fetch quick contact data");
         }
     }
 );
 
-export const getQuickContactSliceForExport = createAsyncThunk<Enquiry, ExportBodyType, { rejectValue: string }>(
+export const getQuickContactSliceForExport = createAsyncThunk<unknown, ExportBodyType, { rejectValue: string }>(
     "enqury/getQuickContactSliceForExport",
     async (body, { rejectWithValue }) => {
         try {
             const data = await fetchQuickContactSliceForExport(body.payload, body.type);
             return data;
-        } catch (error: any) {
-            return rejectWithValue(error.message || "Failed to fetch blogs");
+        } catch (error: unknown) {
+            const message = error instanceof Error ? error.message : "";
+            return rejectWithValue(message || "Failed to export quick contact data");
         }
     }
 );
+
 const QuickContactSlice = createSlice({
-    name: "enquery",
+    name: "quickContact",
     initialState,
-    reducers: {
-    },
+    reducers: {},
     extraReducers: (builder) => {
         builder
             .addCase(getQuickContactSlice.pending, (state) => {
@@ -61,26 +95,35 @@ const QuickContactSlice = createSlice({
             })
             .addCase(getQuickContactSlice.fulfilled, (state, action) => {
                 state.loading = false;
-                console.log(action, "action")
-                state.data = (action.payload as any).results ?? action.payload;
+                const envelope = action.payload as QuickContactResponse | null;
+                state.data = readRows(action.payload);
+                state.count =
+                    typeof envelope?.totalCount === "number"
+                        ? envelope.totalCount
+                        : typeof envelope?.count === "number"
+                            ? envelope.count
+                            : state.data.length;
+                state.previous = envelope?.previous ?? null;
+                state.next = envelope?.next ?? null;
             })
             .addCase(getQuickContactSlice.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload || "Unknown error";
-            }).addCase(getQuickContactSliceForExport.pending, (state) => {
+            })
+            .addCase(getQuickContactSliceForExport.pending, (state) => {
                 state.loading = true;
                 state.error = null;
             })
             .addCase(getQuickContactSliceForExport.fulfilled, (state, action) => {
                 state.loading = false;
-                console.log(action, "action")
-                state.exportData = (action.payload as any).results ?? action.payload;
+                const envelope = action.payload as { results?: unknown; data?: unknown } | null;
+                state.exportData = envelope?.results ?? action.payload;
             })
             .addCase(getQuickContactSliceForExport.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload || "Unknown error";
-            })
+            });
     },
 });
 
-export default QuickContactSlice.reducer;
+export default QuickContactSlice.reducer;

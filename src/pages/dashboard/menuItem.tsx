@@ -48,6 +48,11 @@ export const menuItems = [
     path: '/dashboard/quick-contact',
   },
   {
+    name: 'CMA Landing Page',
+    icon: <FaUsers className="mr-2" />,
+    path: '/dashboard/cma-landing-page',
+  },
+  {
     name: 'Placement support',
     icon: <FaUsers className="mr-2" />,
     path: '/dashboard/placement-support',
@@ -56,6 +61,11 @@ export const menuItems = [
     name: 'Brochure Users',
     icon: <FaUsers className="mr-2" />,
     path: '/dashboard/brochure-list',
+  },
+  {
+    name: 'Subscribers',
+    icon: <FaUsers className="mr-2" />,
+    path: '/dashboard/subscribers',
   },
   {
     name: 'Books Reports',

@@ -1,6 +1,5 @@
 import { Routes, Route, Navigate } from "react-router-dom";
 import Login from "../pages/login";
-import Home from "../pages/dashboard/home";
 import Users from "../pages/dashboard/users";
 import NotFound from "../pages/notFound";
 import Dashboard from "../pages/dashboard";
@@ -40,6 +39,8 @@ import Sales from "../pages/dashboard/sales/Sale";
 import InCompleteSale from "../pages/dashboard/sales/InCompleteSale";
 import SeoPagesTable from "../pages/dashboard/dynamic-pages/SeoPage";
 import DownlaodBrochure from "../pages/dashboard/Brochure_list/BrochureList";
+import SubscriberUsers from "../pages/dashboard/Subscriber/Subscriber";
+import CmaLandingPage from "../pages/dashboard/QuickContactReport/CmaLandingPage";
 
 export default function AppRoutes() {
   return (
@@ -89,6 +90,8 @@ export default function AppRoutes() {
           <Route path="testimonial/add" element={<AddTestimonial />} />
           <Route path="testimonial/update/:id" element={<UpdateTestimonial />} />
           <Route path="brochure-list" element={<DownlaodBrochure />} />
+          <Route path="subscribers" element={<SubscriberUsers />} />
+          <Route path="cma-landing-page" element={<CmaLandingPage />} />
         </Route>
       </Route>
       <Route path="/" element={<Navigate to="/login" />} />
