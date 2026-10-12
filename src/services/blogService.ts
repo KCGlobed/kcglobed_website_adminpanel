@@ -15,6 +15,10 @@ export const updateBlog = async (id: string | number, payload: FormData): Promis
   return await apiRequest(`notes/edit-blog/${id}`, 'POST', payload);
 }
 
+export const changeBlogStatus = async (id: number, isActive: boolean): Promise<unknown> => {
+  return await apiRequest(`notes/change-blog-status/${id}`, 'POST', { is_active: isActive });
+};
+
 export const viewBlog = async (id: number): Promise<any> => {
   return await apiRequest(`notes/view-blog-detail/${id}`, 'GET');
 }

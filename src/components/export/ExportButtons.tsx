@@ -1,5 +1,5 @@
 
-function ExportButtons({ handleExportClick, showExportModal, startDate, endDate, setStartDate, setEndDate, exportType, setShowExportModal, handleSendExport, exportUrl }) {
+function ExportButtons({ handleExportClick, showExportModal, startDate, endDate, setStartDate, setEndDate, exportType, setShowExportModal, handleSendExport, exportUrl, exportFileName = '' }) {
     return (
         <div>
             <div className="flex gap-2 items-center">
@@ -12,7 +12,7 @@ function ExportButtons({ handleExportClick, showExportModal, startDate, endDate,
                             target="_blank"
                             rel="noopener noreferrer"
                             className="px-4 py-1 bg-blue-600 text-xs text-white rounded hover:bg-blue-700 transition"
-                            download
+                            download={exportFileName || true}
                         >
                             Download File
                         </a>

@@ -18,6 +18,7 @@ import testimonialReducer from './slices/testimonialSlice'
 import courseReducer from './slices/courseSlice'
 import salesReducer from './slices/salesSlice'
 import brochureReducer from './slices/brochureSlice'
+import subscriberReducer from './slices/subscriberSlice'
 export const store = configureStore({
   reducer: {
     auth: authReducer,
@@ -38,6 +39,7 @@ export const store = configureStore({
     testimonial: testimonialReducer,
     sales: salesReducer,
     brochure: brochureReducer,
+    subscriber: subscriberReducer,
   },
 });
 

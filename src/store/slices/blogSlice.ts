@@ -20,6 +20,7 @@ export interface Blog {
   created_at: string;
   tags: string[];
   feature_status: number;
+  is_active?: boolean;
   user: number;
   canonical_url: string;
   actions?: any;

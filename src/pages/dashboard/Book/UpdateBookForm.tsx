@@ -22,6 +22,7 @@ interface Book {
     discount_type: string | null;
     publisher: string;
     isbn: string | null;
+    amazon_url?: string;
     gst_percentage: number;
     total_price: number;
     usa_original_price: number;
@@ -34,6 +35,17 @@ interface Book {
     images?: string[];
     is_bundle?: boolean;
 }
+
+// The API validates these now, so only send the ones the admin actually filled in
+const PRICE_FIELDS = new Set([
+    "original_price",
+    "discount_percentage",
+    "total_price",
+    "usa_original_price",
+    "usa_discount_percentage",
+    "usa_total_price",
+    "gst_percentage",
+]);
 
 const UpdateBookForm: React.FC = () => {
     const location = useLocation();
@@ -85,10 +97,26 @@ const UpdateBookForm: React.FC = () => {
         } else if (type === "checkbox") {
             parsedValue = (e.target as HTMLInputElement).checked;
         }
-        setFormData(prev => prev ? ({
-            ...prev,
-            [name]: parsedValue,
-        }) : prev);
+        setFormData(prev => {
+            if (!prev) return prev;
+            const updated = { ...prev, [name]: parsedValue };
+
+            // Auto-calculate India selling price
+            if (name === "original_price" || name === "discount_percentage") {
+                const discount = updated.discount_percentage || 0;
+                const original = updated.original_price || 0;
+                updated.total_price = Number((original - (original * discount) / 100).toFixed(2));
+            }
+
+            // Auto-calculate USA selling price
+            if (name === "usa_original_price" || name === "usa_discount_percentage") {
+                const discountUSA = updated.usa_discount_percentage || 0;
+                const originalUSA = updated.usa_original_price || 0;
+                updated.usa_total_price = Number((originalUSA - (originalUSA * discountUSA) / 100).toFixed(2));
+            }
+
+            return updated;
+        });
     };
 
     const handlePreviewImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -113,12 +141,14 @@ const UpdateBookForm: React.FC = () => {
         if (!formData?.id) return;
         const data: any = new FormData();
         Object.entries(formData).forEach(([key, value]) => {
-            if (value !== null) {
-                if (key === "is_bundle") {
-                    data.append(key, value ? "true" : "false");
-                } else {
-                    data.append(key, value instanceof File ? value : String(value));
-                }
+            // Skipping these keeps the literal "undefined" out of the payload
+            if (value === null || value === undefined) return;
+            if (PRICE_FIELDS.has(key) && value === "") return;
+
+            if (key === "is_bundle") {
+                data.append(key, value ? "true" : "false");
+            } else {
+                data.append(key, value instanceof File ? value : String(value));
             }
         });
         if (previewImage && previewImage.isNew && previewImage.file) {
@@ -191,7 +221,6 @@ const UpdateBookForm: React.FC = () => {
                     <FaArrowLeft /> Back to List
                 </Button></div>
             <form onSubmit={handleSubmit} className="space-y-8">
-                {/* Section 1: Basic Info */}
                 <div className="p-6 bg-gray-50 rounded-lg shadow-md space-y-4">
                     <h2 className="text-lg font-semibold text-gray-700">Basic Information</h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -313,6 +342,7 @@ const UpdateBookForm: React.FC = () => {
                                 value={formData.total_price}
                                 onChange={handleChange}
                                 placeholder="₹"
+                                readOnly
                                 className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                             />
                         </div>
@@ -362,6 +392,7 @@ const UpdateBookForm: React.FC = () => {
                                 value={formData.usa_total_price}
                                 onChange={handleChange}
                                 placeholder="$"
+                                readOnly
                                 className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                             />
                         </div>
@@ -399,6 +430,16 @@ const UpdateBookForm: React.FC = () => {
                                 value={formData.isbn || ""}
                                 onChange={handleChange}
                                 placeholder="ISBN Number"
+                                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Amazon URL</label>
+                            <input
+                                name="amazon_url"
+                                value={formData.amazon_url || ""}
+                                onChange={handleChange}
+                                placeholder="https://www.amazon.in/..."
                                 className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                             />
                         </div>

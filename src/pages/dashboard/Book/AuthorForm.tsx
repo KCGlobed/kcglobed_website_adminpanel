@@ -11,7 +11,7 @@ import { createNewAuthor } from "../../../services/book";
 
 interface AuthorFormProps {
     initialData?: AuthorProps;
-    onSubmit: (data: FormData) => void;
+    onSubmit?: (data: FormData) => void;
 }
 
 const AuthorForm: React.FC<AuthorFormProps> = () => {

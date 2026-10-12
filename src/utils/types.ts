@@ -147,10 +147,19 @@ export interface BrochureUsers {
   created_at: string;
 }
 
+export interface SubscriberUser {
+  id?: number | string;
+  email: string;
+  created_at?: string;
+  date?: string;
+  [key: string]: unknown;
+}
+
 type type = string
 export interface Payload {
   start_date: string,
   end_date: string,
+  source?: string,
 };
 export interface ExportBodyType {
   type: type,
@@ -168,12 +177,15 @@ export interface QuickContactProps {
   state: string | null;
   country: string | null;
   message: string | null;
+  source?: string | null;
   created_at: string;
   course_info: {
     id: number;
     full_name: string;
   };
 }
+
+export type QuickContact = QuickContactProps;
 
 export interface PartnerWithUs {
   id: number;
