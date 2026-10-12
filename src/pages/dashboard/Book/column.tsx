@@ -5,6 +5,12 @@ import type { BookProps } from "../../../utils/types";
 import { getBundleDetail } from "../../../services/book";
 import BundleDetailsModal from "./BundleDetailsModal";
 
+// 0 means in stock and 1 means out of stock
+const StockBadge = ({ value }: { value?: number }) =>
+    Number(value) === 1
+        ? <span className="bg-red-100 text-red-800 text-xs font-medium px-2.5 py-0.5 rounded-lg">Out of Stock</span>
+        : <span className="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded-lg">In Stock</span>;
+
 const fetchBundleDetailsDirect = async (id: any) => {
     // Call your API directly, not via Redux
     const result = await getBundleDetail(id);
@@ -54,9 +60,15 @@ export const Columns = (
         { key: 'total_price', title: 'Discounted Price', align: 'right' },
         {
             key: 'out_of_stock',
-            title: 'Stock Status',
+            title: 'Stock (India)',
             align: 'center',
-            render: (_, row) => row.out_of_stock === 1 ? <span className="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded-lg">In Stock</span> : <span className="bg-red-100 text-red-800 text-xs font-medium px-2.5 py-0.5 rounded-lg">Out of Stock</span>
+            render: (_, row) => <StockBadge value={row.out_of_stock} />
+        },
+        {
+            key: 'usa_out_of_stock',
+            title: 'Stock (US)',
+            align: 'center',
+            render: (_, row) => <StockBadge value={row.usa_out_of_stock} />
         },
         { key: 'publisher', title: 'Publisher', align: 'left' },
         {
