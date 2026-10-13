@@ -34,14 +34,24 @@ const SubscriberUsers: React.FC = () => {
   const [endDate, setEndDate] = useState('2025-07-03');
 
   let exportUrl: string | null = null;
+  let exportFileName: string | undefined;
   if (
     exportData &&
     typeof exportData === 'object' &&
     !Array.isArray(exportData) &&
     'data' in exportData
   ) {
-    const dataObj = (exportData as { data?: { csv_url?: string; pdf_url?: string } }).data;
-    exportUrl = dataObj?.csv_url || dataObj?.pdf_url || null;
+    const dataObj = (exportData as {
+      data?: {
+        csv_url?: string;
+        pdf_url?: string;
+        excel_url?: string;
+        file_url?: string;
+        file_name?: string;
+      };
+    }).data;
+    exportUrl = dataObj?.excel_url || dataObj?.csv_url || dataObj?.pdf_url || dataObj?.file_url || null;
+    exportFileName = dataObj?.file_name;
   }
 
   useEffect(() => {
@@ -68,10 +78,11 @@ const SubscriberUsers: React.FC = () => {
     <div className='overflow-x-hidden'>
       <div className="flex mb-4 gap-4 justify-between">
         <h2 className="text-2xl font-bold text-gray-800">Subscribers Reports</h2>
-        {/* {
+        {
           data?.length > 0 && (
             <ExportButtons
               exportUrl={exportUrl}
+              exportFileName={exportFileName}
               startDate={startDate}
               endDate={endDate}
               setShowExportModal={setShowExportModal}
@@ -83,7 +94,7 @@ const SubscriberUsers: React.FC = () => {
               exportType={exportType}
             />
           )
-        } */}
+        }
       </div>
       <DynamicServerTable<SubscriberUser>
         data={data}
@@ -99,4 +110,3 @@ const SubscriberUsers: React.FC = () => {
 };
 
 export default SubscriberUsers;
- 
