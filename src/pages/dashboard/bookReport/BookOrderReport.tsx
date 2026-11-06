@@ -21,8 +21,6 @@ const BookOrderReport: React.FC = () => {
   const [startDate, setStartDate] = useState('2025-07-01');
   const [endDate, setEndDate] = useState('2025-07-03');
   const { showModal } = useModal()
-  const [pdfReady, setPdfReady] = useState(false);
-  const reportTemplateRef = React.createRef<HTMLDivElement>();
   let exportUrl: string | null = null;
   if (exportData && typeof exportData === 'object' && !Array.isArray(exportData) && 'data' in exportData) {
     exportUrl = (exportData as any).data.csv_url || (exportData as any).data.pdf_url || null;
@@ -53,16 +51,12 @@ const BookOrderReport: React.FC = () => {
     const data = res?.data || res;
     if (!data) return;
 
-    // Reset PDF ready state
-    setPdfReady(false);
-
     showModal({
       title: (
         <div className="flex justify-between items-center">
           <span>Order Details - #{data.orderID}</span>
           <button
             onClick={() => generateOrderPDF(data)}
-            disabled={!pdfReady}
             className="bg-blue-600 hover:bg-blue-700 text-white text-sm px-3 py-1 rounded"
           >
             Download PDF
@@ -76,11 +70,7 @@ const BookOrderReport: React.FC = () => {
           backgroundColor: "#fff",
           padding: "16px",
         }}>
-          <ModalContent
-            ref={reportTemplateRef}
-            data={data}
-            onReadyForPdf={() => setPdfReady(true)}
-          />
+          <ModalContent data={data} />
         </div>
       ),
     } as any);
