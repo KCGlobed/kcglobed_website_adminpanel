@@ -1,18 +1,13 @@
 // src/components/ModalContent.tsx
-import { useEffect, forwardRef } from "react";
+import { forwardRef } from "react";
 
 interface ModalContentProps {
     data: any;
-    onReadyForPdf?: () => void;
 }
 
 // Use forwardRef so parent can get ref to DOM element
 export const ModalContent = forwardRef<HTMLDivElement, ModalContentProps>(
-    ({ data, onReadyForPdf }, ref) => {
-        useEffect(() => {
-            if (onReadyForPdf) onReadyForPdf();
-        }, [onReadyForPdf]);
-
+    ({ data }, ref) => {
         return (
             <div
                 ref={ref}

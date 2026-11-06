@@ -34,7 +34,8 @@ export const generateOrderPDF = (order: any) => {
         styles: { fontSize: 10 },
     });
 
-    let currentY = doc.lastAutoTable.finalY + 20;
+    // jspdf-autotable sets `lastAutoTable` on the doc at runtime but does not declare it.
+    let currentY = ((doc as any).lastAutoTable?.finalY ?? 60) + 20;
 
     // Ordered Books
     if (order.ordered_books && order.ordered_books.length > 0) {
