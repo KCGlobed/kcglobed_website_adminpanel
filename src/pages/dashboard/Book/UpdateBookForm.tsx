@@ -6,6 +6,10 @@ import { getAllAuthors, getAllBooks, getBookImage, updateExistingBook } from "..
 import Button from "../../../components/TextEditor/ui/Button";
 import { FaArrowLeft } from "react-icons/fa";
 import { addRelatedBooks, assignAuthorToBook, deleteBookAuthor, deleteRelatedBook, getBookAuthorsApi, getRelatedBooks } from "../../../services/book";
+import { useAlert } from "../../../context/AlertContext";
+import LandingPageFields from "./LandingPageFields";
+import { parseLandingPage } from "./landingPage";
+import type { LandingPage } from "./landingPage";
 
 interface Book {
     id?: number;
@@ -35,6 +39,7 @@ interface Book {
     description?: string;
     images?: string[];
     is_bundle?: boolean;
+    landing_page?: LandingPage | string | null;
 }
 
 // The API validates these now, so only send the ones the admin actually filled in
@@ -62,6 +67,9 @@ const UpdateBookForm: React.FC = () => {
     const [previewImage, setPreviewImage] = useState<{ file?: File; url: string; isNew: boolean } | null>(null);
     const [dropdownOpen, setDropdownOpen] = useState(false);
     const [related_books, setRelatedBooks] = useState<string[]>([]);
+    const { showAlert } = useAlert();
+    const [landingPage, setLandingPage] = useState<LandingPage>(() => parseLandingPage(book?.landing_page));
+    const [landingImagesUploading, setLandingImagesUploading] = useState(false);
     // Prefill from backend
     useEffect(() => {
         if (book && book.id !== undefined) {
@@ -140,10 +148,20 @@ const UpdateBookForm: React.FC = () => {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!formData?.id) return;
+        if (landingImagesUploading) {
+            showAlert("Please wait until the landing page images finish uploading.", "warning");
+            return;
+        }
+        if (landingPage.enabled && !landingPage.hero.title.trim()) {
+            showAlert("Landing page is on: please add a title in \"1. Top banner\".", "warning");
+            return;
+        }
         const data: any = new FormData();
         Object.entries(formData).forEach(([key, value]) => {
             // Skipping these keeps the literal "undefined" out of the payload
             if (value === null || value === undefined) return;
+            // Sent below as JSON
+            if (key === "landing_page") return;
             if (PRICE_FIELDS.has(key) && value === "") return;
 
             if (key === "is_bundle") {
@@ -152,6 +170,7 @@ const UpdateBookForm: React.FC = () => {
                 data.append(key, value instanceof File ? value : String(value));
             }
         });
+        data.append("landing_page", JSON.stringify(landingPage));
         if (previewImage && previewImage.isNew && previewImage.file) {
             data.append("perview_image", previewImage.file);
         } else {
@@ -610,13 +629,16 @@ const UpdateBookForm: React.FC = () => {
                     {/* Full Description */}
 
                 </div>
+                {/* Section 6: Landing page */}
+                <LandingPageFields value={landingPage} onChange={setLandingPage} onUploadingChange={setLandingImagesUploading} />
                 {/* Submit Button */}
                 <div className="text-right">
                     <button
                         type="submit"
-                        className="inline-flex items-center bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        disabled={landingImagesUploading}
+                        className="inline-flex items-center bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-60"
                     >
-                        Update Book
+                        {landingImagesUploading ? "Uploading images…" : "Update Book"}
                     </button>
                 </div>
             </form>
