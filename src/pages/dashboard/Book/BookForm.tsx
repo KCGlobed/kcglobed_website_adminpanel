@@ -7,6 +7,9 @@ import { FaArrowLeft } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import { useAlert } from "../../../context/AlertContext";
 import { addBookImage, addRelatedBooks, assignAuthorToBook } from "../../../services/book";
+import LandingPageFields from "./LandingPageFields";
+import { emptyLandingPage } from "./landingPage";
+import type { LandingPage } from "./landingPage";
 
 interface Book {
     id?: number;
@@ -61,6 +64,8 @@ const BookForm: React.FC<BookFormProps> = () => {
     const [assignAuthor, setAssignAuthor] = useState()
     const [dropdownOpen, setDropdownOpen] = useState(false);
     const [related_books, setRelatedBooks] = useState<string[]>([]);
+    const [landingPage, setLandingPage] = useState<LandingPage>(emptyLandingPage);
+    const [landingImagesUploading, setLandingImagesUploading] = useState(false);
 
     const { showAlert } = useAlert()
     const navigate = useNavigate()
@@ -156,6 +161,14 @@ const BookForm: React.FC<BookFormProps> = () => {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        if (landingImagesUploading) {
+            showAlert("Please wait until the landing page images finish uploading.", "warning");
+            return;
+        }
+        if (landingPage.enabled && !landingPage.hero.title.trim()) {
+            showAlert("Landing page is on: please add a title in \"1. Top banner\".", "warning");
+            return;
+        }
 
         const data: any = new FormData();
         Object.entries(formData).forEach(([key, value]) => {
@@ -172,6 +185,8 @@ const BookForm: React.FC<BookFormProps> = () => {
         if (previewImage) {
             data.append("perview_image", previewImage.file);
         }
+        // Books without the landing page design are saved exactly as before
+        if (landingPage.enabled) data.append("json_data", JSON.stringify(landingPage));
 
         try {
             const res: any = await dispatch(uploadNewBook(data)).unwrap();
@@ -752,12 +767,15 @@ const BookForm: React.FC<BookFormProps> = () => {
                 </div>
 
 
+                {/* Landing page */}
+                <LandingPageFields value={landingPage} onChange={setLandingPage} onUploadingChange={setLandingImagesUploading} />
+
                 {/* Submit Button */}
                 <div className="text-right">
                     <button
                         type="submit"
-                        className="inline-flex items-center bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        disabled={loading}
+                        className="inline-flex items-center bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-60"
+                        disabled={loading || landingImagesUploading}
                     >
                         {loading ? (
                             <>

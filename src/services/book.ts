@@ -63,3 +63,22 @@ export const addRelatedBooks = (payload: { book_id: any; related_book_id: number
 export const deleteRelatedBook = (body: any): Promise<any> => {
     return apiRequest(`book/delete-related-book/`, "POST", body);
 };
+
+// Image upload for the book landing page. The API saves the file and returns its public link.
+const LANDING_IMAGE_UPLOAD_URL = "book/upload-image/";
+
+export const uploadLandingImage = async (file: File): Promise<string> => {
+    const body = new FormData();
+    body.append("image", file);
+    type UploadResponse =
+        | { url?: string; image?: string; image_url?: string; public_url?: string; link?: string; data?: { url?: string; image?: string; image_url?: string; public_url?: string } }
+        | string;
+    const res = await apiRequest<UploadResponse>(LANDING_IMAGE_UPLOAD_URL, "POST", body);
+    // Accept the common response shapes until the final one is agreed
+    const url = typeof res === "string"
+        ? res
+        : res?.url ?? res?.image_url ?? res?.public_url ?? res?.image ?? res?.link
+          ?? res?.data?.url ?? res?.data?.image_url ?? res?.data?.public_url ?? res?.data?.image ?? "";
+    if (!url) throw new Error("Upload succeeded but no image link was returned");
+    return url;
+};
