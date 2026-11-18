@@ -185,7 +185,8 @@ const BookForm: React.FC<BookFormProps> = () => {
         if (previewImage) {
             data.append("perview_image", previewImage.file);
         }
-        data.append("landing_page", JSON.stringify(landingPage));
+        // Books without the landing page design are saved exactly as before
+        if (landingPage.enabled) data.append("json_data", JSON.stringify(landingPage));
 
         try {
             const res: any = await dispatch(uploadNewBook(data)).unwrap();

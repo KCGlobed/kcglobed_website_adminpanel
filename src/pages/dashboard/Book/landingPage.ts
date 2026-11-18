@@ -1,5 +1,5 @@
 // Content for the book landing page design on the website (/book/<id>/<slug>).
-// Sent to the API as the `landing_page` JSON field of a book.
+// Sent to the API as the `json_data` field of a book.
 // Price, stock, ISBN, pages, language, publisher and author are NOT part of it:
 // the website reads those from the normal book fields.
 
@@ -199,18 +199,38 @@ export const sampleLandingPage = (): LandingPage => ({
 
 // The API may return the field as an object, a JSON string or null.
 // Missing keys are filled from the empty template so the form never reads undefined.
+// Every field empty: saved content is merged into this, so fields a book leaves out stay empty
+// (and stay hidden on the website) instead of picking up the defaults meant for a new book.
+const blankLandingPage = (): LandingPage => ({
+    enabled: false,
+    meta_title: "",
+    meta_description: "",
+    short_name: "",
+    hero: { eyebrow: "", title: "", tagline: "", lead: "", rating_score: "", rating_count: "", byline: "", image: "", image_caption: "" },
+    preparation: { eyebrow: "", heading: "", lead: "", focus_heading: "", focus_lead: "" },
+    chapters: { eyebrow: "", heading: "", intro: "", items: [] },
+    why: { eyebrow: "", heading: "", intro: "", items: [] },
+    journey: { heading: "", steps: [], copy: "" },
+    inside: { eyebrow: "", heading: "", facts: "", contents: [], covers_image: "", pages: [] },
+    audience: { heading: "", lead: "", items: [] },
+    what_you_get: { heading: "", items: [] },
+    details: { heading: "", summary: "", image: "" },
+    faq: [],
+    final: { heading: "", text: "" },
+});
+
 export function parseLandingPage(raw: unknown): LandingPage {
-    const base = emptyLandingPage();
     let value: unknown = raw;
     if (typeof value === "string") {
         try {
             value = JSON.parse(value);
         } catch {
-            return base;
+            return emptyLandingPage();
         }
     }
-    if (!value || typeof value !== "object") return base;
+    if (!value || typeof value !== "object") return emptyLandingPage();
 
+    const base = blankLandingPage();
     const saved = value as Record<string, unknown>;
     const merged: Record<string, unknown> = { ...base, ...saved };
     for (const key of Object.keys(base) as (keyof LandingPage)[]) {

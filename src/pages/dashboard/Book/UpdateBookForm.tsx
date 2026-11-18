@@ -39,7 +39,7 @@ interface Book {
     description?: string;
     images?: string[];
     is_bundle?: boolean;
-    landing_page?: LandingPage | string | null;
+    json_data?: LandingPage | string | null;
 }
 
 // The API validates these now, so only send the ones the admin actually filled in
@@ -68,7 +68,7 @@ const UpdateBookForm: React.FC = () => {
     const [dropdownOpen, setDropdownOpen] = useState(false);
     const [related_books, setRelatedBooks] = useState<string[]>([]);
     const { showAlert } = useAlert();
-    const [landingPage, setLandingPage] = useState<LandingPage>(() => parseLandingPage(book?.landing_page));
+    const [landingPage, setLandingPage] = useState<LandingPage>(() => parseLandingPage(book?.json_data));
     const [landingImagesUploading, setLandingImagesUploading] = useState(false);
     // Prefill from backend
     useEffect(() => {
@@ -161,7 +161,7 @@ const UpdateBookForm: React.FC = () => {
             // Skipping these keeps the literal "undefined" out of the payload
             if (value === null || value === undefined) return;
             // Sent below as JSON
-            if (key === "landing_page") return;
+            if (key === "json_data") return;
             if (PRICE_FIELDS.has(key) && value === "") return;
 
             if (key === "is_bundle") {
@@ -170,7 +170,8 @@ const UpdateBookForm: React.FC = () => {
                 data.append(key, value instanceof File ? value : String(value));
             }
         });
-        data.append("landing_page", JSON.stringify(landingPage));
+        // Only touch json_data when the landing page is on, or to save it being switched off
+        if (landingPage.enabled || book?.json_data) data.append("json_data", JSON.stringify(landingPage));
         if (previewImage && previewImage.isNew && previewImage.file) {
             data.append("perview_image", previewImage.file);
         } else {

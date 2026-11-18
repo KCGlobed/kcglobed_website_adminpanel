@@ -1,7 +1,7 @@
 import React, { useRef, useState } from "react";
 import { uploadLandingImage } from "../../../services/book";
 import { useAlert } from "../../../context/AlertContext";
-import { emptyLandingPage, sampleLandingPage } from "./landingPage";
+import { emptyLandingPage, parseLandingPage, sampleLandingPage } from "./landingPage";
 import type { FaqItem, LandingPage, PagePreview, TitleText } from "./landingPage";
 
 // Book landing page editor, shared by the create and update book forms.
@@ -194,6 +194,27 @@ const LandingPageFields: React.FC<LandingPageFieldsProps> = ({ value, onChange, 
     const { showAlert } = useAlert();
     const pending = useRef(0);
     const [uploadingKeys, setUploadingKeys] = useState<string[]>([]);
+    const [importOpen, setImportOpen] = useState(false);
+    const [importText, setImportText] = useState("");
+
+    // Replaces the whole section with pasted json_data; it is saved with the normal Update / Create button
+    const applyImport = () => {
+        let parsed: unknown;
+        try {
+            parsed = JSON.parse(importText);
+        } catch {
+            showAlert("That is not valid JSON. Paste the whole json_data object, starting with { and ending with }.", "error");
+            return;
+        }
+        if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+            showAlert("Paste a JSON object (starting with {).", "error");
+            return;
+        }
+        onChange(parseLandingPage(parsed));
+        setImportOpen(false);
+        setImportText("");
+        showAlert("Landing page content imported. Check it below, then save the book.", "success");
+    };
 
     // Uploads one file; `key` marks which image box shows the spinner
     const upload = async (file: File, key: string): Promise<string | null> => {
@@ -277,6 +298,35 @@ const LandingPageFields: React.FC<LandingPageFieldsProps> = ({ value, onChange, 
                         className="h-5 w-5 text-blue-600 border-gray-300 rounded"
                     />
                 </label>
+            </div>
+
+            <div>
+                <button
+                    type="button"
+                    className="px-3 py-1.5 text-sm border border-gray-300 rounded-md bg-white hover:bg-gray-100"
+                    onClick={() => setImportOpen(open => !open)}
+                >
+                    {importOpen ? "Close import" : "Import JSON"}
+                </button>
+                {importOpen && (
+                    <div className="mt-3 space-y-2">
+                        <textarea
+                            rows={8}
+                            value={importText}
+                            onChange={e => setImportText(e.target.value)}
+                            placeholder='Paste the json_data here, e.g. { "enabled": true, "hero": { "title": "…" } }'
+                            className={`${inputClass} font-mono text-xs`}
+                        />
+                        <button
+                            type="button"
+                            className="px-3 py-1.5 text-sm text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:opacity-50"
+                            disabled={!importText.trim()}
+                            onClick={applyImport}
+                        >
+                            Apply to form
+                        </button>
+                    </div>
+                )}
             </div>
 
             {value.enabled && (
