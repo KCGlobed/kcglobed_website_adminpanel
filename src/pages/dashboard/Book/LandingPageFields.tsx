@@ -250,7 +250,7 @@ const LandingPageFields: React.FC<LandingPageFieldsProps> = ({ value, onChange, 
         },
     });
 
-    const { hero, preparation, chapters, why, journey, inside, audience, what_you_get, details, faq, final } = value;
+    const { hero, preparation, chapters, why, journey, inside, audience, author, what_you_get, details, faq, final } = value;
 
     const addPagePreviews = async (files: FileList) => {
         const list = Array.from(files);
@@ -409,7 +409,7 @@ const LandingPageFields: React.FC<LandingPageFieldsProps> = ({ value, onChange, 
                         />
                     </Section>
 
-                    <Section number={4} title="Why this book" hint="Benefits with a tick mark. Usually 5.">
+                    <Section number={4} title="Why this book" hint="Benefit cards with an icon and a number, then a Buy card. Usually 5.">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <Field label="Small text above the heading" value={why.eyebrow} onChange={v => patch("why", { eyebrow: v })} placeholder="Why This Book" />
                             <Field label="Heading" value={why.heading} onChange={v => patch("why", { heading: v })} />
@@ -425,10 +425,21 @@ const LandingPageFields: React.FC<LandingPageFieldsProps> = ({ value, onChange, 
                         />
                     </Section>
 
-                    <Section number={5} title="Preparation journey" hint="Steps joined by arrows, then a short line and a Buy button. Usually 6 steps.">
-                        <Field label="Heading" value={journey.heading} onChange={v => patch("journey", { heading: v })} placeholder="Your … Preparation, From Start to Finish" />
-                        <StringList label="Steps" items={journey.steps} onChange={steps => patch("journey", { steps })} placeholder="e.g. Understand Fundamentals" addLabel="Add step" />
-                        <Field label="Line under the steps" value={journey.copy} onChange={v => patch("journey", { copy: v })} />
+                    <Section number={5} title="Study roadmap" hint="Steps split into three phases (Learn, Apply, Revise), then a Buy band. Usually 6 steps.">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <Field label="Small text above the heading" value={journey.eyebrow} onChange={v => patch("journey", { eyebrow: v })} placeholder="Your Study Roadmap" />
+                            <Field label="Heading" value={journey.heading} onChange={v => patch("journey", { heading: v })} placeholder="A Step-by-Step Approach to … Preparation" />
+                        </div>
+                        <Field label="Intro line (optional)" value={journey.intro} onChange={v => patch("journey", { intro: v })} placeholder="Left empty: “Six focused steps across three phases — from first principles to exam day.”" />
+                        <TitleTextList
+                            label="Steps"
+                            items={journey.steps}
+                            onChange={steps => patch("journey", { steps })}
+                            titlePlaceholder="Step name, e.g. Understand the Basics"
+                            textPlaceholder="One line about the step (optional)"
+                            addLabel="Add step"
+                        />
+                        <Field label="Line in the Buy band" value={journey.copy} onChange={v => patch("journey", { copy: v })} />
                     </Section>
 
                     <Section number={6} title="Book preview" hint="Contents list, cover photo and a slider of sample pages.">
@@ -484,17 +495,45 @@ const LandingPageFields: React.FC<LandingPageFieldsProps> = ({ value, onChange, 
                             <Field label="Line above the list" value={audience.lead} onChange={v => patch("audience", { lead: v })} placeholder="This book is ideal for:" />
                         </div>
                         <StringList label="Readers" items={audience.items} onChange={items => patch("audience", { items })} placeholder="e.g. ACCA students preparing for Audit & Assurance" addLabel="Add reader" />
+                    </Section>
+
+                    <Section number={8} title="About the author" hint="Author photo, name, two highlight boxes and a short bio. Empty fields show Dr. Kamal Chhabra's profile.">
+                        <ImageInput
+                            label="Author photo"
+                            hint="Square photo (about 500 × 500 px). Leave empty to use Dr. Kamal Chhabra's photo."
+                            {...imageProps("author", author.image, url => patch("author", { image: url }))}
+                        />
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <Field label="Name" value={author.name} onChange={v => patch("author", { name: v })} placeholder="Dr. Kamal Chhabra" />
+                            <Field label="Gold line under the name" value={author.credentials} onChange={v => patch("author", { credentials: v })} placeholder="US CPA | CA | Founder & CEO, KC GlobEd" />
+                        </div>
+                        <Field label="Heading" value={author.heading} onChange={v => patch("author", { heading: v })} placeholder="Authored by an Audit & Finance Professional. Built on Real-World Expertise." />
+                        <TitleTextList
+                            label="Highlight boxes"
+                            items={author.highlights.map(h => ({ title: h.value, text: h.label }))}
+                            onChange={items => patch("author", { highlights: items.map(i => ({ value: i.title, label: i.text })) })}
+                            titlePlaceholder="Big text, e.g. 20+ Years"
+                            textPlaceholder="Small text, e.g. Professional Experience"
+                            addLabel="Add highlight"
+                        />
+                        <Field
+                            label="Bio"
+                            hint="Wrap words in **double asterisks** to show them in bold."
+                            textarea
+                            value={author.bio}
+                            onChange={v => patch("author", { bio: v })}
+                        />
                         <p className="text-xs text-gray-500 bg-white border border-gray-200 rounded p-2">
-                            The author profile, KC GlobEd numbers and Amazon reviews come next. They are the same on every book page.
+                            The KC GlobEd numbers and Amazon reviews come next. They are the same on every book page.
                         </p>
                     </Section>
 
-                    <Section number={8} title="What you get" hint="Tick list with the price and a Buy button.">
+                    <Section number={9} title="What you get" hint="Tick list with the price and a Buy button.">
                         <Field label="Heading" value={what_you_get.heading} onChange={v => patch("what_you_get", { heading: v })} placeholder="Your … Study Companion" />
                         <StringList label="Items" items={what_you_get.items} onChange={items => patch("what_you_get", { items })} placeholder="e.g. 376-page book" addLabel="Add item" />
                     </Section>
 
-                    <Section number={9} title="Product details" hint="Product photo next to a price card. Publisher, pages, language and ISBN are filled automatically.">
+                    <Section number={10} title="Product details" hint="Product photo next to a price card. Publisher, pages, language and ISBN are filled automatically.">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <Field label="Heading" value={details.heading} onChange={v => patch("details", { heading: v })} placeholder="ACCA Audit & Assurance" />
                             <Field label="Line above the price" value={details.summary} onChange={v => patch("details", { summary: v })} placeholder="376-page subject resource" />
@@ -506,7 +545,7 @@ const LandingPageFields: React.FC<LandingPageFieldsProps> = ({ value, onChange, 
                         />
                     </Section>
 
-                    <Section number={10} title="FAQ" hint="Questions and answers.">
+                    <Section number={11} title="FAQ" hint="Questions and answers.">
                         <div className="space-y-3">
                             {faq.map((item, i) => (
                                 <div key={i} className="flex gap-2 items-start p-3 border border-gray-200 rounded-md bg-gray-50">
@@ -527,12 +566,12 @@ const LandingPageFields: React.FC<LandingPageFieldsProps> = ({ value, onChange, 
                         <button type="button" className={addButton} onClick={() => onChange(prev => ({ ...prev, faq: [...prev.faq, { question: "", answer: "" }] }))}>+ Add question</button>
                     </Section>
 
-                    <Section number={11} title="Closing banner" hint="Purple section at the end with the price and a Buy button.">
+                    <Section number={12} title="Closing banner" hint="Purple section at the end with the price and a Buy button.">
                         <Field label="Heading" value={final.heading} onChange={v => patch("final", { heading: v })} placeholder="Ready to Take the Next Step in Your Preparation?" />
                         <Field label="Text" textarea value={final.text} onChange={v => patch("final", { text: v })} />
                     </Section>
 
-                    <Section number={12} title="SEO and purchase bar" hint="Browser tab title, Google description and the name in the sticky Buy bar.">
+                    <Section number={13} title="SEO and purchase bar" hint="Browser tab title, Google description and the name in the sticky Buy bar.">
                         <Field label="Page title (browser tab and Google)" value={value.meta_title} onChange={v => onChange(prev => ({ ...prev, meta_title: v }))} placeholder="ACCA Audit & Assurance Study Book | KC GlobEd" />
                         <Field label="Google description" textarea value={value.meta_description} onChange={v => onChange(prev => ({ ...prev, meta_description: v }))} />
                         <Field label="Short book name (sticky Buy bar)" value={value.short_name} onChange={v => onChange(prev => ({ ...prev, short_name: v }))} placeholder="ACCA Audit & Assurance Book" />

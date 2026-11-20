@@ -18,6 +18,34 @@ export interface FaqItem {
     answer: string;
 }
 
+export interface AuthorHighlight {
+    value: string;
+    label: string;
+}
+
+// "About the author" section. Any field left empty shows Dr. Kamal Chhabra's profile on the website.
+export interface LandingAuthor {
+    name: string;
+    image: string;
+    heading: string;
+    credentials: string;
+    highlights: AuthorHighlight[];
+    // Text wrapped in **double asterisks** shows in bold
+    bio: string;
+}
+
+export const defaultAuthor = (): LandingAuthor => ({
+    name: "Dr. Kamal Chhabra",
+    image: "",
+    heading: "Authored by an Audit & Finance Professional. Built on Real-World Expertise.",
+    credentials: "US CPA | CA | Founder & CEO, KC GlobEd",
+    highlights: [
+        { value: "20+ Years", label: "Professional Experience" },
+        { value: "Author of 11", label: "Professional Books" },
+    ],
+    bio: "Dr. Kamal Chhabra is a **techno-commercial veteran with 20+ years of experience** across Indian and international markets, with professional experience at leading Big Four firms, including **PwC and EY**. A **US CPA and Indian CA**, he is the Founder & CEO and lead instructor at KC GlobEd, and the author of multiple professional books. He has served as Director – International Relations, North America, at MSME & Startup Forum, supporting Indian businesses in global expansion. He also mentors MSMEs and startups, facilitates investment support, and co-founded **ScaleX Times**, a US-based investor network connecting global investors with Indian ventures.",
+});
+
 export interface LandingPage {
     enabled: boolean;
     meta_title: string;
@@ -43,7 +71,8 @@ export interface LandingPage {
     };
     chapters: { eyebrow: string; heading: string; intro: string; items: TitleText[] };
     why: { eyebrow: string; heading: string; intro: string; items: TitleText[] };
-    journey: { heading: string; steps: string[]; copy: string };
+    // Roadmap: steps are shown in up to three phases (Learn, Apply, Revise); a step's text is optional
+    journey: { eyebrow: string; heading: string; intro: string; steps: TitleText[]; copy: string };
     inside: {
         eyebrow: string;
         heading: string;
@@ -53,6 +82,7 @@ export interface LandingPage {
         pages: PagePreview[];
     };
     audience: { heading: string; lead: string; items: string[] };
+    author: LandingAuthor;
     what_you_get: { heading: string; items: string[] };
     details: { heading: string; summary: string; image: string };
     faq: FaqItem[];
@@ -78,9 +108,10 @@ export const emptyLandingPage = (): LandingPage => ({
     preparation: { eyebrow: "A Clearer Way to Prepare", heading: "", lead: "", focus_heading: "", focus_lead: "" },
     chapters: { eyebrow: "Explore What's Inside", heading: "", intro: "", items: [{ title: "", text: "" }] },
     why: { eyebrow: "Why This Book", heading: "", intro: "", items: [{ title: "", text: "" }] },
-    journey: { heading: "", steps: [""], copy: "" },
+    journey: { eyebrow: "Your Study Roadmap", heading: "", intro: "", steps: [{ title: "", text: "" }], copy: "" },
     inside: { eyebrow: "Book Preview", heading: "", facts: "", contents: [""], covers_image: "", pages: [] },
     audience: { heading: "Who is this book for?", lead: "This book is ideal for:", items: [""] },
+    author: defaultAuthor(),
     what_you_get: { heading: "", items: [""] },
     details: { heading: "", summary: "", image: "" },
     faq: [{ question: "", answer: "" }],
@@ -140,8 +171,12 @@ export const sampleLandingPage = (): LandingPage => ({
         ],
     },
     journey: {
+        eyebrow: "Your Study Roadmap",
         heading: "Your ACCA Audit & Assurance Preparation, From Start to Finish",
-        steps: ["Understand Fundamentals", "Build Knowledge", "Connect Concepts", "Explore Applications", "Reinforce Learning", "Prepare for Final Preparation"],
+        intro: "",
+        steps: ["Understand Fundamentals", "Build Knowledge", "Connect Concepts", "Explore Applications", "Reinforce Learning", "Prepare for Final Preparation"].map(
+            (title) => ({ title, text: "" })
+        ),
         copy: "Keep your learning and revision focused with one dedicated Audit & Assurance study resource.",
     },
     inside: {
@@ -169,6 +204,7 @@ export const sampleLandingPage = (): LandingPage => ({
             "Learners looking for a dedicated Audit & Assurance resource",
         ],
     },
+    author: defaultAuthor(),
     what_you_get: {
         heading: "Your ACCA Audit & Assurance Study Companion",
         items: [
@@ -210,9 +246,10 @@ const blankLandingPage = (): LandingPage => ({
     preparation: { eyebrow: "", heading: "", lead: "", focus_heading: "", focus_lead: "" },
     chapters: { eyebrow: "", heading: "", intro: "", items: [] },
     why: { eyebrow: "", heading: "", intro: "", items: [] },
-    journey: { heading: "", steps: [], copy: "" },
+    journey: { eyebrow: "", heading: "", intro: "", steps: [], copy: "" },
     inside: { eyebrow: "", heading: "", facts: "", contents: [], covers_image: "", pages: [] },
     audience: { heading: "", lead: "", items: [] },
+    author: { name: "", image: "", heading: "", credentials: "", highlights: [], bio: "" },
     what_you_get: { heading: "", items: [] },
     details: { heading: "", summary: "", image: "" },
     faq: [],
@@ -240,5 +277,14 @@ export function parseLandingPage(raw: unknown): LandingPage {
         }
     }
     if (!Array.isArray(merged.faq)) merged.faq = base.faq;
+    // Books saved before the author section existed show the profile the website already uses
+    if (!saved.author || typeof saved.author !== "object") merged.author = defaultAuthor();
+    const author = merged.author as { highlights: unknown };
+    if (!Array.isArray(author.highlights)) author.highlights = [];
+    // Older saves hold journey steps as plain names
+    const journey = merged.journey as { steps: unknown };
+    journey.steps = (Array.isArray(journey.steps) ? journey.steps : []).map((step) =>
+        typeof step === "string" ? { title: step, text: "" } : { title: "", text: "", ...(step as object) }
+    );
     return merged as unknown as LandingPage;
 }
