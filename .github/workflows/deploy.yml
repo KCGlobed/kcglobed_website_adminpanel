@@ -1,116 +1,89 @@
-name: Deploy Application
-
+name: Deploy to DigitalOcean
+ 
+# Builds the React app "kcg-admin-panel" and deploys it to the droplet 168.144.211.139.
+# Created from the stats panel. Runs on every push to main, or by hand from the Actions tab.
+# Secrets used: SSH_HOST, SSH_USER, SSH_PASSWORD, and ENV_FILE (optional: the .env for the build).
 on:
+  workflow_dispatch:
   push:
     branches:
       - main
-
+ 
+concurrency:
+  group: deploy-digitalocean-kcg-admin-panel
+  cancel-in-progress: false
+ 
+env:
+  APP_DIR: /var/www/apps/kcg-admin-panel   # releases/ and the "current" symlink live here
+  KEEP_RELEASES: 5                 # older releases are deleted after a deploy
+ 
 jobs:
-
   deploy:
-
     runs-on: ubuntu-latest
-
+ 
     steps:
-
-      ######################################################
-      # Checkout Repository
-      ######################################################
-
       - name: Checkout Repository
         uses: actions/checkout@v4
-
-      ######################################################
-      # Read Project Configuration
-      ######################################################
-
-      - name: Read deployment.json
-        run: |
-          PROJECT_NAME=$(jq -r '.project.name' deployment.json)
-
-          echo "PROJECT_NAME=$PROJECT_NAME" >> $GITHUB_ENV
-
-      ######################################################
-      # React Build
-      ######################################################
-
-      - name: Setup Node
-        if: hashFiles('package.json') != ''
+ 
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 22
-
+ 
+      # Optional: the build settings (VITE_... or REACT_APP_...) from the ENV_FILE secret
+      - name: Write .env
+        env:
+          ENV_FILE: ${{ secrets.ENV_FILE }}
+        run: |
+          if [ -n "$ENV_FILE" ]; then printf '%s\n' "$ENV_FILE" > .env; echo "Wrote .env"; else echo "No ENV_FILE secret: using the repo's own settings"; fi
+ 
       - name: Install Dependencies
-        if: hashFiles('package.json') != ''
-        run: npm ci
-
-      - name: Build React
-        if: hashFiles('package.json') != ''
+        run: |
+          if [ -f package-lock.json ]; then npm ci --legacy-peer-deps; else npm install --legacy-peer-deps; fi
+ 
+      - name: Build React Application
         run: npm run build
-
-      ######################################################
-      # Package React
-      ######################################################
-
-      - name: Package React
-        if: hashFiles('package.json') != ''
+ 
+      # Package the build output: dist/ (Vite) or build/ (Create React App)
+      - name: Package Build
         run: |
-          ARCHIVE="release_$(date +%Y%m%d_%H%M%S).tar.gz"
-
-          tar -czf "$ARCHIVE" \
-            -C dist \
-            .
-
-          echo "ARCHIVE=$ARCHIVE" >> $GITHUB_ENV
-
-      ######################################################
-      # Package Static HTML
-      ######################################################
-
-      - name: Package Static HTML
-        if: hashFiles('package.json') == ''
-        run: |
-          ARCHIVE="release_$(date +%Y%m%d_%H%M%S).tar.gz"
-
-          TEMP_DIR=$(mktemp -d)
-
-          rsync -a \
-            --exclude=".git" \
-            --exclude=".github" \
-            ./ "$TEMP_DIR/"
-
-          tar -czf "$ARCHIVE" \
-            -C "$TEMP_DIR" \
-            .
-
-          rm -rf "$TEMP_DIR"
-
-          echo "ARCHIVE=$ARCHIVE" >> $GITHUB_ENV
-
-      ######################################################
-      # Upload Package
-      ######################################################
-
+          set -e
+          RELEASE="$(date +%Y%m%d_%H%M%S)"
+          ARCHIVE="release_${RELEASE}.tar.gz"
+          if [ -f dist/index.html ]; then BUILD_DIR=dist
+          elif [ -f build/index.html ]; then BUILD_DIR=build
+          else echo "ERROR: no dist/index.html or build/index.html after the build"; exit 1; fi
+          tar -czf "$ARCHIVE" -C "$BUILD_DIR" .
+          echo "RELEASE=$RELEASE" >> "$GITHUB_ENV"
+          echo "ARCHIVE=$ARCHIVE" >> "$GITHUB_ENV"
+          ls -lh "$ARCHIVE"
+ 
       - name: Copy Package
         uses: appleboy/scp-action@v0.1.7
         with:
-          host: ${{ secrets.SERVER_HOST }}
-          username: ${{ secrets.SERVER_USER }}
-          key: ${{ secrets.SERVER_SSH_KEY }}
-          source: "${{ env.ARCHIVE }}"
-          target: "/var/www/apps/${{ env.PROJECT_NAME }}/releases"
-
-      ######################################################
-      # Deploy
-      ######################################################
-
-      - name: Deploy
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          password: ${{ secrets.SSH_PASSWORD }}
+          source: ${{ env.ARCHIVE }}
+          target: ${{ env.APP_DIR }}/uploads
+ 
+      # Unpack, check, switch the "current" link in one step, keep the newest releases
+      - name: Activate Release
         uses: appleboy/ssh-action@v1.2.2
         with:
-          host: ${{ secrets.SERVER_HOST }}
-          username: ${{ secrets.SERVER_USER }}
-          key: ${{ secrets.SERVER_SSH_KEY }}
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          password: ${{ secrets.SSH_PASSWORD }}
+          envs: APP_DIR,RELEASE,ARCHIVE,KEEP_RELEASES
           script: |
-            /opt/deploy-platform/scripts/deploy.sh \
-              "${{ env.PROJECT_NAME }}" \
-              "${{ env.ARCHIVE }}"
+            set -e
+            TARGET="$APP_DIR/releases/$RELEASE"
+            mkdir -p "$TARGET"
+            tar -xzf "$APP_DIR/uploads/$ARCHIVE" -C "$TARGET"
+            rm -f "$APP_DIR/uploads/$ARCHIVE"
+            test -f "$TARGET/index.html" || { echo "ERROR: index.html missing in release"; exit 1; }
+            ln -sfn "$TARGET" "$APP_DIR/current.tmp"
+            mv -Tf "$APP_DIR/current.tmp" "$APP_DIR/current"
+            cd "$APP_DIR/releases"
+            ls -1t | tail -n +$((KEEP_RELEASES + 1)) | xargs -r rm -rf
+            echo "Live: $(readlink -f "$APP_DIR/current")"
